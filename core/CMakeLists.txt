@@ -1,0 +1,1 @@
+add_library(core ChatEvent.h ChatEvent.cpp ChatPacket.cpp ChatPacket.h)
