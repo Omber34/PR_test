@@ -6,22 +6,19 @@
 #include <boost/asio.hpp>
 #include "ChatServer.h"
 
-int main() {
+int main(int argc, char ** argv) {
     try {
         if (argc < 2) {
             std::cerr << "Usage: chat_server <port> [<port> ...]\n";
             return 1;
         }
 
-        boost::asio::io_context io_context;
-
-        std::list<chat_server> servers;
-        for (int i = 1; i < argc; ++i) {
-            tcp::endpoint endpoint(tcp::v4(), std::atoi(argv[i]));
-            servers.emplace_back(io_context, endpoint);
+        std::vector<std::string> ports;
+        for (size_t i = 1; i < argc; ++i){
+            ports.emplace_back(argv[i]);
         }
 
-        io_context.run();
+        ChatServer chatServer(ports);
     }
     catch (std::exception &e) {
         std::cerr << "Exception: " << e.what() << "\n";

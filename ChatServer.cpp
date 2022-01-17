@@ -5,8 +5,6 @@
 #include <list>
 #include <deque>
 #include <set>
-#include "ChatServer.h"
-#include "core/ChatEvent.h"
 #include <cstdlib>
 #include <deque>
 #include <iostream>
@@ -14,15 +12,19 @@
 #include <memory>
 #include <set>
 #include <utility>
+
+#include "ChatServer.h"
+#include "core/ChatPacket.h"
+
 #include <boost/asio.hpp>
 
-typedef std::deque<ChatEvent> ChatEventQueue;
+typedef std::deque<ChatPacket> ChatPacketQueue;
 
 class chat_participant
 {
 public:
     virtual ~chat_participant() {}
-    virtual void deliver(const ChatEvent& msg) = 0;
+    virtual void deliver(const ChatPacket& msg) = 0;
 };
 
 typedef std::shared_ptr<chat_participant> chat_participant_ptr;
@@ -45,7 +47,7 @@ public:
         participants_.erase(participant);
     }
 
-    void deliver(const ChatEvent& msg)
+    void deliver(const ChatPacket& msg)
     {
         recent_msgs_.push_back(msg);
         while (recent_msgs_.size() > max_recent_msgs)
@@ -58,7 +60,7 @@ public:
 private:
     std::set<chat_participant_ptr> participants_;
     enum { max_recent_msgs = 100 };
-    ChatEventQueue recent_msgs_;
+    ChatPacketQueue recent_msgs_;
 };
 
 //----------------------------------------------------------------------
@@ -80,7 +82,7 @@ public:
         do_read_header();
     }
 
-    void deliver(const ChatEvent& msg)
+    void deliver(const ChatPacket& msg)
     {
         bool write_in_progress = !write_msgs_.empty();
         write_msgs_.push_back(msg);
@@ -95,7 +97,7 @@ private:
     {
         auto self(shared_from_this());
         boost::asio::async_read(socket_,
-            boost::asio::buffer(read_msg_.data(), ChatEvent::header_length),
+            boost::asio::buffer(read_msg_.data(), ChatPacket::header_length),
             [this, self](boost::system::error_code ec, std::size_t /*length*/)
             {
                 if (!ec && read_msg_.decode_header())
@@ -153,8 +155,8 @@ private:
 
     boost::asio::ip::tcp::socket socket_;
     chat_room& room_;
-    ChatEvent read_msg_;
-    ChatEventQueue write_msgs_;
+    ChatPacket read_msg_;
+    ChatPacketQueue write_msgs_;
 };
 
 class chat_server

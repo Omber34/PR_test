@@ -12,7 +12,12 @@
 
 class ChatServer {
 public:
-    ChatServer(const std::vector<std::string> &ports);
+    explicit ChatServer(const std::vector<std::string> &ports);
+
+    ChatServer(const ChatServer &other) = delete;
+    ChatServer(ChatServer &&other) = delete;
+    ChatServer& operator=(const ChatServer &other) = delete;
+    ChatServer& operator=(ChatServer &&other) = delete;
 };
 
 

@@ -27,6 +27,9 @@ add_subdirectory(core)
 add_executable(ChatServer server.cpp ChatServer.cpp ChatServer.h)
 add_executable(ChatClient client.cpp ChatClient.cpp ChatClient.h)
 
+target_link_libraries(ChatServer core)
+target_link_libraries(ChatClient core)
+
 target_link_libraries(ChatServer ${Boost_LIBRARIES})
 target_include_directories(ChatServer PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries(ChatClient ${Boost_LIBRARIES})
