@@ -14,6 +14,7 @@ class ChatServer {
 public:
     explicit ChatServer(const std::vector<std::string> &ports);
 
+    ChatServer() = delete;
     ChatServer(const ChatServer &other) = delete;
     ChatServer(ChatServer &&other) = delete;
     ChatServer& operator=(const ChatServer &other) = delete;

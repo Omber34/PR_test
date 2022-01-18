@@ -53,6 +53,6 @@ char *ChatPacket::data() {
 }
 
 ChatPacket::ChatPacket()
-        : body_length_(0)
+    : body_length_(0)
 {
 }

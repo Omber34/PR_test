@@ -18,8 +18,6 @@
 
 #include <boost/asio.hpp>
 
-typedef std::deque<ChatPacket> ChatPacketQueue;
-
 class chat_participant
 {
 public:
@@ -204,6 +202,6 @@ ChatServer::ChatServer(const std::vector<std::string> &ports) {
     }
     catch (std::exception& e)
     {
-        std::cerr << "Exception: " << e.what() << "\n";
+        printf("Exception: %s\n", e.what());
     }
 }

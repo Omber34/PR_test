@@ -4,6 +4,9 @@
 
 #ifndef PR_TEST_CHATPACKET_H
 #define PR_TEST_CHATPACKET_H
+
+#include <deque>
+
 #include "ChatEvent.h"
 
 class ChatPacket {
@@ -36,5 +39,7 @@ private:
     std::size_t body_length_;
 };
 
+
+typedef std::deque<ChatPacket> ChatPacketQueue;
 
 #endif //PR_TEST_CHATPACKET_H

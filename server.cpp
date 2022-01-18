@@ -8,16 +8,16 @@
 
 int main(int argc, char ** argv) {
     try {
-        if (argc < 2) {
-            std::cerr << "Usage: chat_server <port> [<port> ...]\n";
-            return 1;
-        }
-
         std::vector<std::string> ports;
-        for (size_t i = 1; i < argc; ++i){
-            ports.emplace_back(argv[i]);
-        }
 
+        if (argc < 2) {
+            ports.emplace_back("4026");
+        }
+        else {
+            for (size_t i = 1; i < argc; ++i) {
+                ports.emplace_back(argv[i]);
+            }
+        }
         ChatServer chatServer(ports);
     }
     catch (std::exception &e) {
