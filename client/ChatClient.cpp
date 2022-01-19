@@ -8,6 +8,7 @@
 #include <iostream>
 #include <memory>
 #include <thread>
+#include <utility>
 
 using boost::asio::ip::tcp;
 
@@ -17,7 +18,7 @@ public:
     ChatClientImpl(boost::asio::io_context& io_context, const tcp::resolver::results_type& endpoints, std::function<void (ChatPacket&)> packetConsumer)
     : io_context_(io_context),
       socket_(io_context),
-      packetConsumer(packetConsumer)
+      packetConsumer(std::move(packetConsumer))
     {
         do_connect(endpoints);
     }

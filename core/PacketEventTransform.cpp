@@ -16,23 +16,21 @@ ChatPacket PacketEventTransform::packetFromEvent(const ChatEvent &event) {
 
     auto doc = QJsonDocument();
     doc.setObject(eventData);
-    char* packetData = doc.toJson().data();
-    qDebug() << " packetFromEvent packet data" <<  doc.toJson() << "\n";
+    std::string buff = doc.toJson().toStdString();
+    const char* packetData = buff.data();
+
     ChatPacket result;
     result.body_length(std::strlen(packetData));
-    std::memcpy(result.data(), packetData, result.body_length());
+    std::memcpy(result.body(), packetData, result.body_length());
     result.encode_header();
 
     return result;
 }
 
 ChatEvent PacketEventTransform::eventFromPacket(ChatPacket &packet) {
-    packet.decode_header();
-    QByteArray packetData = packet.body();
-    qDebug() << " eventFromPacket packet data 1" << packet.data() << "\n";
+    QByteArray packetData = QByteArray::fromStdString(packet.body());
     auto doc = QJsonDocument::fromBinaryData(packetData);
     auto jsonEvent = doc.object();
-    qDebug() << " eventFromPacket packet data doc" <<  doc.toJson() << "\n";
 
     ChatEvent result;
     result.type = static_cast<ChatEvent::EventType>(jsonEvent["type"].toInt());
