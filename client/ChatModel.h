@@ -11,7 +11,7 @@
 #include <QSet>
 #include <utility>
 
-#include "../core/ChatEvent.h"
+#include "ChatEvent.h"
 
 class ChatModel : public QAbstractListModel
 {

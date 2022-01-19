@@ -1,4 +1,8 @@
 #include <iostream>
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
+#include <QQmlContext>
+
 #include "ChatClient.h"
 
 int main(int argc, char ** argv) {
@@ -9,20 +13,35 @@ int main(int argc, char ** argv) {
     }
     ChatClient client(host, port);
 
-    char line[ChatPacket::max_body_length + 1];
+    QGuiApplication app(argc, argv);
 
-    std::cin.getline(line, ChatPacket::max_body_length + 1);
-    client.setUsername(line);
+    QQmlApplicationEngine engine;
 
-    while (std::cin.getline(line, ChatPacket::max_body_length + 1))
-    {
-        ChatEvent event;
-        event.user = QString::fromStdString(client.getUsername());
-        event.message = ChatMessage{QString(line), true};
-        event.type = ChatEvent::EventType::PARTICIPANT_MESSAGE;
-        client.SendPacket(PacketEventTransform::packetFromEvent(event));
-    }
+    qmlRegisterSingletonInstance<Auth>("system", 1, 0, "Auth", g_auth);
+    qmlRegisterSingletonInstance<Xmpp>("system", 1, 0, "Xmpp", g_xmpp);
+    qmlRegisterSingletonInstance<SignUp>("system", 1, 0, "SignUp", g_signup);
+    qmlRegisterSingletonInstance<PhoneAuth>("system", 1, 0, "PhoneAuth", g_phoneAuth);
+    qmlRegisterSingletonInstance<TwitterAuth>("system", 1, 0, "TwitterAuth", g_twitterAuth);
+    qmlRegisterSingletonInstance<ErrorManager>("error", 1, 0, "ErrorManager", ErrorManager::getInstance());
+    qmlRegisterSingletonInstance<UsersCache>("users", 1, 0, "UserCache", &UsersCache::getInstance());
 
-    client.Disconnect();
-    return 0;
+    QObject::connect(g_auth, &Auth::loggingOut,
+                     g_xmpp, &Xmpp::logout);
+
+    qmlRegisterType<ChatModel>("models", 1, 0, "ChatModel");
+
+    qmlRegisterUncreatableType<ChatEvent>("enums", 1, 0, "ChatEvent",
+                                          "Not creatable as it is an enum type.");
+
+    const QUrl url(QStringLiteral("qrc:/main.qml"));
+    QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
+                     &app, [url](QObject *obj, const QUrl &objUrl) {
+                if (!obj && url == objUrl)
+                    QCoreApplication::exit(-1);
+            }, Qt::QueuedConnection);
+
+
+    engine.load(url);
+
+    return app.exec();
 }

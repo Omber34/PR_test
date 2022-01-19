@@ -10,8 +10,8 @@
 #include <utility>
 
 #include "ChatServer.h"
-#include "core/ChatPacket.h"
-#include "core/PacketEventTransform.h"
+#include "ChatPacket.h"
+#include "PacketEventTransform.h"
 
 #include <boost/asio.hpp>
 

@@ -8,9 +8,9 @@
 #include <memory>
 #include <thread>
 #include <boost/asio.hpp>
-#include "../core/ChatPacket.h"
+#include "ChatPacket.h"
 #include "ChatModel.h"
-#include "../core/PacketEventTransform.h"
+#include "PacketEventTransform.h"
 
 class ChatClient {
 public:
