@@ -1,1 +1,1 @@
-add_library(core ChatEvent.h ChatEvent.cpp ChatPacket.cpp ChatPacket.h)
+add_library(core ChatEvent.h ChatEvent.cpp ChatPacket.cpp ChatPacket.h PacketEventTransform.cpp PacketEventTransform.h)

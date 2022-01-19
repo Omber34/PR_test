@@ -3,18 +3,15 @@
 //
 
 #include <list>
-#include <deque>
 #include <set>
 #include <cstdlib>
-#include <deque>
 #include <iostream>
-#include <list>
 #include <memory>
-#include <set>
 #include <utility>
 
 #include "ChatServer.h"
 #include "core/ChatPacket.h"
+#include "core/PacketEventTransform.h"
 
 #include <boost/asio.hpp>
 
@@ -118,6 +115,8 @@ private:
             {
                 if (!ec)
                 {
+                    auto event = PacketEventTransform::eventFromPacket(read_msg_);
+                    std::cout << event.user.toStdString() << ": " << event.message.message.toStdString() << "\n";
                     room_.deliver(read_msg_);
                     do_read_header();
                 }
@@ -175,6 +174,7 @@ private:
                 {
                     if (!ec)
                     {
+                        std::cout << "we have a new member!!" << '\n';
                         std::make_shared<chat_session>(std::move(socket), room_)->start();
                     }
 

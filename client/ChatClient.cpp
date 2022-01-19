@@ -14,9 +14,10 @@ using boost::asio::ip::tcp;
 class ChatClient::ChatClientImpl
 {
 public:
-    ChatClientImpl(boost::asio::io_context& io_context, const tcp::resolver::results_type& endpoints)
+    ChatClientImpl(boost::asio::io_context& io_context, const tcp::resolver::results_type& endpoints, std::function<void (ChatPacket&)> packetConsumer)
     : io_context_(io_context),
-      socket_(io_context)
+      socket_(io_context),
+      packetConsumer(packetConsumer)
     {
         do_connect(endpoints);
     }
@@ -78,8 +79,7 @@ private:
         {
             if (!ec)
             {
-                std::cout.write(read_msg_.body(), read_msg_.body_length());
-                std::cout << "\n";
+                packetConsumer(read_msg_);
                 do_read_header();
             }
             else
@@ -116,6 +116,7 @@ private:
     tcp::socket socket_;
     ChatPacket read_msg_;
     ChatPacketQueue write_msgs_;
+    std::function<void (ChatPacket&)> packetConsumer;
 };
 
 
@@ -125,7 +126,10 @@ ChatClient::ChatClient(const std::string &host, const std::string &port)
     {
         tcp::resolver resolver(io_context);
         auto endpoints = resolver.resolve(host, port);
-        impl = std::make_unique<ChatClientImpl>(io_context, endpoints);
+        impl = std::make_unique<ChatClientImpl>(io_context, endpoints,
+                                                [this] (ChatPacket& packet) {
+            model.addEvent(PacketEventTransform::eventFromPacket(packet));
+        });
 
         ioContextThread = std::thread([this](){ io_context.run(); });
     }
@@ -147,4 +151,12 @@ ChatClient::~ChatClient() {
 void ChatClient::Disconnect() {
     impl->close();
     ioContextThread.join();
+}
+
+void ChatClient::setUsername(const std::string &newUser) {
+    model.setUser(QString::fromStdString(newUser));
+}
+
+std::string ChatClient::getUsername() const {
+    return model.getUser().toStdString();
 }

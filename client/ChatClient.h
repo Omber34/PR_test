@@ -8,11 +8,16 @@
 #include <memory>
 #include <thread>
 #include <boost/asio.hpp>
-#include "core/ChatPacket.h"
+#include "../core/ChatPacket.h"
+#include "ChatModel.h"
+#include "../core/PacketEventTransform.h"
 
 class ChatClient {
 public:
     ChatClient(const std::string& host, const std::string& port);
+
+    void setUsername(const std::string &newUser);
+    std::string getUsername() const;
 
     void SendPacket(ChatPacket packet);
 
@@ -31,6 +36,7 @@ private:
     std::thread ioContextThread;
     class ChatClientImpl;
     std::unique_ptr<ChatClientImpl> impl;
+    ChatModel model;
 };
 
 
