@@ -1,0 +1,12 @@
+<RCC>
+    <qresource  prefix="/">
+        <file alias="main.qml">qml/main.qml</file>
+        <file alias="ChatScreen.qml">qml/ChatScreen.qml</file>
+    </qresource>
+
+    <qresource  prefix="/">
+        <file alias="send_message.svg">../images/send_message.svg</file>
+        <file alias="file.svg">../images/file.svg</file>
+        <file alias="user.svg">../images/user.svg</file>
+    </qresource>
+</RCC>

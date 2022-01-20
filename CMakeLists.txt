@@ -12,13 +12,7 @@ SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "D:/boost/lib")
 
 find_package(Boost)
 
-set ( RSC
-        ./qml.qrc
-        )
-
 find_package(Qt5 COMPONENTS Core Qml Quick REQUIRED)
-
-QT5_ADD_RESOURCES(RSCS ${RSC})
 
 add_subdirectory(core)
 add_subdirectory(client)

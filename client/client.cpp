@@ -17,16 +17,10 @@ int main(int argc, char ** argv) {
 
     QQmlApplicationEngine engine;
 
-    qmlRegisterSingletonInstance<Auth>("system", 1, 0, "Auth", g_auth);
-    qmlRegisterSingletonInstance<Xmpp>("system", 1, 0, "Xmpp", g_xmpp);
-    qmlRegisterSingletonInstance<SignUp>("system", 1, 0, "SignUp", g_signup);
-    qmlRegisterSingletonInstance<PhoneAuth>("system", 1, 0, "PhoneAuth", g_phoneAuth);
-    qmlRegisterSingletonInstance<TwitterAuth>("system", 1, 0, "TwitterAuth", g_twitterAuth);
-    qmlRegisterSingletonInstance<ErrorManager>("error", 1, 0, "ErrorManager", ErrorManager::getInstance());
-    qmlRegisterSingletonInstance<UsersCache>("users", 1, 0, "UserCache", &UsersCache::getInstance());
+    //qmlRegisterSingletonInstance<Auth>("system", 1, 0, "Auth", g_auth);
 
-    QObject::connect(g_auth, &Auth::loggingOut,
-                     g_xmpp, &Xmpp::logout);
+//    QObject::connect(g_auth, &Auth::loggingOut,
+//                     g_xmpp, &Xmpp::logout);
 
     qmlRegisterType<ChatModel>("models", 1, 0, "ChatModel");
 
