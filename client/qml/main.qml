@@ -3,7 +3,7 @@ import QtQuick.Window 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Templates 2.12 as T
 import QtQuick.Layouts 1.12
-import Screens 1.0
+import "."
 
 Window
 {
@@ -14,6 +14,8 @@ Window
     height: 600
 
     title: qsTr("Chat")
+
+    color: "gray"
 
     Component
     {

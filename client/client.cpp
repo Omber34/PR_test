@@ -11,14 +11,10 @@ int main(int argc, char ** argv) {
         host = argv[1];
         port = argv[2];
     }
-    ChatClient client(host, port);
-
     QGuiApplication app(argc, argv);
 
     QQmlApplicationEngine engine;
-
-    //qmlRegisterSingletonInstance<Auth>("system", 1, 0, "Auth", g_auth);
-
+    ChatClient::getInstance();
 //    QObject::connect(g_auth, &Auth::loggingOut,
 //                     g_xmpp, &Xmpp::logout);
 

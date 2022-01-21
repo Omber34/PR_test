@@ -18,7 +18,7 @@ int main(int argc, char ** argv) {
                 ports.emplace_back(argv[i]);
             }
         }
-        ChatServer chatServer(ports);
+        ChatServer chatServer;
     }
     catch (std::exception &e) {
         std::cerr << "Exception: " << e.what() << "\n";

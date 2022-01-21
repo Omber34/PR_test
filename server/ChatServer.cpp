@@ -11,7 +11,7 @@
 
 #include "ChatServer.h"
 #include "ChatPacket.h"
-#include "PacketEventTransform.h"
+#include "CoreUtility.h"
 
 #include <boost/asio.hpp>
 
@@ -115,8 +115,9 @@ private:
             {
                 if (!ec)
                 {
-                    auto event = PacketEventTransform::eventFromPacket(read_msg_);
-                    std::cout << event.user.toStdString() << ": " << event.message.message.toStdString() << "\n";
+                    auto event = CoreUtility::eventFromPacket(read_msg_);
+                    std::cout << event.user.toStdString() << " : " << event.message.message.toStdString() << "\n";
+
                     room_.deliver(read_msg_);
                     do_read_header();
                 }
@@ -186,17 +187,14 @@ private:
     chat_room room_;
 };
 
-ChatServer::ChatServer(const std::vector<std::string> &ports) {
+ChatServer::ChatServer() {
     try
     {
         boost::asio::io_context io_context;
 
         std::list<chat_server> servers;
-        for (const auto & port : ports)
-        {
-            tcp::endpoint endpoint(tcp::v4(), std::stoi(port));
-            servers.emplace_back(io_context, endpoint);
-        }
+        tcp::endpoint endpoint(tcp::v4(), std::stoi(defaultPort));
+        servers.emplace_back(io_context, endpoint);
 
         io_context.run();
     }

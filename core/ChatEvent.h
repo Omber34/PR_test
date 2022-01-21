@@ -33,7 +33,7 @@ struct ChatEvent
     Q_PROPERTY(QString timeString READ getTimeString)
 
 public:
-    enum class EventType {
+    enum EventType {
         PARTICIPANT_MESSAGE,
         PARTICIPANT_FILE,
         PARTICIPANT_JOIN,

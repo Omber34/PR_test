@@ -121,15 +121,16 @@ private:
 };
 
 
-ChatClient::ChatClient(const std::string &host, const std::string &port)
+ChatClient::ChatClient(QObject *parent)
+    : QObject(parent)
 {
     try
     {
         tcp::resolver resolver(io_context);
-        auto endpoints = resolver.resolve(host, port);
+        auto endpoints = resolver.resolve(defaultHost, defaultPort);
         impl = std::make_unique<ChatClientImpl>(io_context, endpoints,
                                                 [this] (ChatPacket& packet) {
-            model.addEvent(PacketEventTransform::eventFromPacket(packet));
+            eventReceived(CoreUtility::eventFromPacket(packet));
         });
 
         ioContextThread = std::thread([this](){ io_context.run(); });
@@ -154,10 +155,7 @@ void ChatClient::Disconnect() {
     ioContextThread.join();
 }
 
-void ChatClient::setUsername(const std::string &newUser) {
-    model.setUser(QString::fromStdString(newUser));
-}
-
-std::string ChatClient::getUsername() const {
-    return model.getUser().toStdString();
+ChatClient& ChatClient::getInstance() {
+    static ChatClient client;
+    return client;
 }

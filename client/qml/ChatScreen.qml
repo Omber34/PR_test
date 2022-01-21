@@ -5,7 +5,6 @@ import QtQuick.Layouts 1.2
 import QtGraphicalEffects 1.0
 import models 1.0
 import enums 1.0
-import ".."
 
 Item
 {
@@ -30,17 +29,18 @@ Item
 
             anchors.centerIn: parent
 
-            text: tableName
+            text: "Chat Room"
 
             verticalAlignment: Text.AlignVCenter
             horizontalAlignment: Text.AlignHCenter
-            color: "white"
+            color: "lightblue"
         }
     }
 
     ChatModel
     {
         id: chatModel
+        user: "boris"
     }
 
     ListView
@@ -55,7 +55,7 @@ Item
         width: 500
         spacing: 15
 
-        model: tableModel.chat
+        model: chatModel
 
         Connections
         {
@@ -63,6 +63,7 @@ Item
 
             onEventAdded:
             {
+                console.log("newEventReceived")
                 messageListView.positionViewAtEnd()
             }
         }
@@ -73,15 +74,6 @@ Item
 
             width: messageListView.width
             height: Math.max(userImg.height, msgText.height) + 10
-
-            MouseArea
-            {
-                anchors.fill: parent
-                onClicked:
-                {
-                    tableModel.currentParticipantInView = model.event.user.username
-                }
-            }
 
             Rectangle
             {
@@ -96,7 +88,7 @@ Item
                 width: imgSize
                 height: visible ? imgSize : 1
                 radius: height / 2
-                color: "transparent"
+                color: "red"
 
                 layer.enabled: true
                 layer.effect: OpacityMask {
@@ -114,7 +106,7 @@ Item
 
                     anchors.centerIn: parent
 
-                    source: model.image.photo
+                    source: "qrc:/user.svg"
                     width: imgRect.imgSize
                     height: visible ? imgRect.imgSize : 1
                     sourceSize.width: width
@@ -126,13 +118,12 @@ Item
             {
                 id: msgText
 
-                visible: model.event.type === ChatEvent.MESSAGE
+                visible: model.event.type === ChatEvent.PARTICIPANT_MESSAGE
                 anchors.top: parent.top
                 anchors.topMargin: 5
 
                 text: model.event.message.message
-                color: "white"
-                width: messageListView.width * 0.65
+                color: "lightblue"
                 elide: Text.ElideRight
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
 
@@ -160,11 +151,11 @@ Item
             {
                 id: timeText
 
-                visible: model.event.type === ChatEvent.MESSAGE
+                visible: model.event.type === ChatEvent.PARTICIPANT_MESSAGE
                 anchors.bottom: parent.bottom
 
                 text: model.event.timeString
-                color: "lightgray"
+                color: "lightblue"
                 width: 100
                 style: Text.Outline
                 styleColor: "black"
@@ -191,7 +182,7 @@ Item
             {
                 id: eventText
 
-                visible: model.event.type !== ChatEvent.MESSAGE
+                visible: model.event.type !== ChatEvent.PARTICIPANT_MESSAGE
                 anchors.top: parent.top
                 anchors.topMargin: 5
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -200,27 +191,23 @@ Item
                 {
                     switch(model.event.type)
                     {
-                    case ChatEvent.JOINED:
-                    {
-                        return "New user sat down"
+                        case ChatEvent.PARTICIPANT_JOIN:
+                        {
+                            return "New user sat down"
+                        }
+                        case ChatEvent.PARTICIPANT_LEAVE:
+                        {
+                            return "User stood up"
+                        }
+                        case ChatEvent.PARTICIPANT_FILE:
+                        {
+                           return "File was sent"
+                        }
                     }
-                    case ChatEvent.LEFT:
-                    {
-                        return "User stood up"
-                    }
-                    case ChatEvent.STARTED:
-                    {
-                       return "Table was started"
-                    }
-                    case ChatEvent.END:
-                    {
-                        return "Table was ended"
-                    }
-                    }
-                    return "Undefined message type"
+                    return "Undefined event type"
                 }
 
-                color: "white"
+                color: "red"
                 width: messageListView.width * 0.65
                 horizontalAlignment: Text.AlignHCenter
                 elide: Text.ElideRight
@@ -273,7 +260,7 @@ Item
         if (text.trim() === "")
             return;
         console.log("Sending text: " + text)
-        tableModel.send(text)
+        chatModel.sendMessage(text)
     }
 }
 

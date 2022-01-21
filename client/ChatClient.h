@@ -7,23 +7,29 @@
 
 #include <memory>
 #include <thread>
+
+#include <QObject>
+#include <QQmlEngine>
+#include <QJSEngine>
+
 #include <boost/asio.hpp>
+
 #include "ChatPacket.h"
 #include "ChatModel.h"
-#include "PacketEventTransform.h"
+#include "CoreUtility.h"
 
-class ChatClient {
-public:
-    ChatClient(const std::string& host, const std::string& port);
-
-    void setUsername(const std::string &newUser);
-    std::string getUsername() const;
-
+class ChatClient : public QObject {
+    Q_OBJECT
+public slots:
     void SendPacket(ChatPacket packet);
 
+signals:
+    void eventReceived(ChatEvent);
+
+public:
     void Disconnect();
 
-    ChatClient() = delete;
+    static ChatClient& getInstance();
     ChatClient(const ChatClient &other) = delete;
     ChatClient(ChatClient &&other) = delete;
     ChatClient& operator=(const ChatClient &other) = delete;
@@ -32,11 +38,12 @@ public:
     ~ChatClient();
 
 private:
+    explicit ChatClient(QObject *parent = nullptr);
+
     boost::asio::io_context io_context;
     std::thread ioContextThread;
     class ChatClientImpl;
     std::unique_ptr<ChatClientImpl> impl;
-    ChatModel model;
 };
 
 

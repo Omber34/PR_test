@@ -12,6 +12,7 @@
 #include <utility>
 
 #include "ChatEvent.h"
+#include "ChatPacket.h"
 
 class ChatModel : public QAbstractListModel
 {
@@ -21,9 +22,11 @@ class ChatModel : public QAbstractListModel
     {
         eEventRole = Qt::UserRole + 1,
     };
-
 public:
+    Q_PROPERTY(QString user READ getUser WRITE setUser)
+
     explicit ChatModel(QObject *parent = nullptr);
+    //explicit ChatModel(std::function<void(ChatPacket)> packetSender, QObject *parent = nullptr);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
@@ -33,15 +36,24 @@ public:
 
     const QString &getUser() const;
 
-    void setUser(const QString &user);
+    void setUser(const QString &_user);
 
+
+    Q_INVOKABLE void sendMessage(const QString &msg);
+
+public slots:
     void addEvent(ChatEvent ev);
+
 signals:
     void eventAdded();
+
+public:
+    virtual ~ChatModel();
 
 private:
     QList<ChatEvent> m_events;
     QString user;
+    std::function<void(ChatPacket)> packetSender;
 };
 
 #endif //PR_TEST_CHATMODEL_H
