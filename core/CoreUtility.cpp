@@ -18,7 +18,7 @@ ChatPacket CoreUtility::packetFromEvent(const ChatEvent &event) {
     doc.setObject(eventData);
     std::string buff = doc.toJson().toStdString();
     const char* packetData = buff.data();
-    qDebug() << doc.toJson();
+    qDebug() << "packetFromEvent" << doc.toJson(QJsonDocument::Compact);
     ChatPacket result;
     result.body_length(std::strlen(packetData));
     std::memcpy(result.body(), packetData, result.body_length());
@@ -28,8 +28,8 @@ ChatPacket CoreUtility::packetFromEvent(const ChatEvent &event) {
 }
 
 ChatEvent CoreUtility::eventFromPacket(ChatPacket &packet) {
-    QByteArray packetData = QByteArray::fromStdString(packet.body());
-    qDebug() << packetData;
+    QByteArray packetData = QByteArray::fromStdString({packet.body(), packet.body_length()});
+    qDebug() << "eventFromPacket"<< packetData;
     auto doc = QJsonDocument::fromJson(packetData);
     auto jsonEvent = doc.object();
 

@@ -26,7 +26,6 @@ public:
     Q_PROPERTY(QString user READ getUser WRITE setUser)
 
     explicit ChatModel(QObject *parent = nullptr);
-    //explicit ChatModel(std::function<void(ChatPacket)> packetSender, QObject *parent = nullptr);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
@@ -49,6 +48,7 @@ signals:
 
 public:
     virtual ~ChatModel();
+    void Greetings();
 
 private:
     QList<ChatEvent> m_events;

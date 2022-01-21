@@ -63,7 +63,6 @@ Item
 
             onEventAdded:
             {
-                console.log("newEventReceived")
                 messageListView.positionViewAtEnd()
             }
         }
@@ -193,21 +192,21 @@ Item
                     {
                         case ChatEvent.PARTICIPANT_JOIN:
                         {
-                            return "New user sat down"
+                            return model.event.user + " sat down"
                         }
                         case ChatEvent.PARTICIPANT_LEAVE:
                         {
-                            return "User stood up"
+                            return model.event.user + "stood up"
                         }
                         case ChatEvent.PARTICIPANT_FILE:
                         {
-                           return "File was sent"
+                           return model.event.message.message + " was sent by " + model.event.user
                         }
                     }
                     return "Undefined event type"
                 }
 
-                color: "red"
+                color: "lightblue"
                 width: messageListView.width * 0.65
                 horizontalAlignment: Text.AlignHCenter
                 elide: Text.ElideRight

@@ -175,7 +175,6 @@ private:
                 {
                     if (!ec)
                     {
-                        std::cout << "we have a new member!!" << '\n';
                         std::make_shared<chat_session>(std::move(socket), room_)->start();
                     }
 

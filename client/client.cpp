@@ -22,6 +22,7 @@ int main(int argc, char ** argv) {
 
     qmlRegisterUncreatableType<ChatEvent>("enums", 1, 0, "ChatEvent",
                                           "Not creatable as it is an enum type.");
+    qRegisterMetaType<ChatEvent>();
 
     const QUrl url(QStringLiteral("qrc:/main.qml"));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
