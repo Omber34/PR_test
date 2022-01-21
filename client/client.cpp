@@ -14,7 +14,6 @@ int main(int argc, char ** argv) {
     QGuiApplication app(argc, argv);
 
     QQmlApplicationEngine engine;
-    ChatClient::getInstance();
 //    QObject::connect(g_auth, &Auth::loggingOut,
 //                     g_xmpp, &Xmpp::logout);
 

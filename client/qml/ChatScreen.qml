@@ -8,6 +8,7 @@ import enums 1.0
 
 Item
 {
+    property string username: "Boris Britva"
     id: screen
 
     Item
@@ -40,7 +41,7 @@ Item
     ChatModel
     {
         id: chatModel
-        user: "boris"
+        user: screen.username
     }
 
     ListView
@@ -196,7 +197,7 @@ Item
                         }
                         case ChatEvent.PARTICIPANT_LEAVE:
                         {
-                            return model.event.user + "stood up"
+                            return model.event.user + " stood up"
                         }
                         case ChatEvent.PARTICIPANT_FILE:
                         {

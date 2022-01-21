@@ -19,8 +19,8 @@ Window
 
     Component
     {
-        id: welcomeScreen
-        ChatScreen {}
+        id: connectScreen
+        ConnectScreen {}
     }
 
     T.StackView
@@ -32,7 +32,7 @@ Window
         height: parent.height
         clip: true
 
-        initialItem: welcomeScreen
+        initialItem: connectScreen
 
         popEnter: Transition {}
         popExit: Transition {}

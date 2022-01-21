@@ -2,6 +2,7 @@
     <qresource  prefix="/">
         <file alias="main.qml">qml/main.qml</file>
         <file alias="ChatScreen.qml">qml/ChatScreen.qml</file>
+        <file alias="ConnectScreen.qml">qml/ConnectScreen.qml</file>
     </qresource>
 
     <qresource  prefix="/">
