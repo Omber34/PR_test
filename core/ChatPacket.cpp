@@ -10,14 +10,17 @@ const char *ChatPacket::data() const {
 
 void ChatPacket::encode_header() {
     char header[header_length + 1] = "";
-    std::sprintf(header, "%4d", static_cast<int>(body_length_));
+    std::sprintf(header, "%4d%4d", static_cast<int>(body_length_), static_cast<int>(sequence_index_));
     std::memcpy(data_, header, header_length);
 }
 
 bool ChatPacket::decode_header() {
-    char header[header_length + 1] = "";
-    std::strncat(header, data_, header_length);
-    body_length_ = std::stoi(header);
+    char sequence_header[sequence_length + 1] = "";
+    char body_header_length_[body_header_length + 1] = "";
+    std::strncat(sequence_header, data_, sequence_length);
+    std::strncat(body_header_length_, data_ + sequence_length, body_header_length);
+    sequence_index_ = std::stoi(sequence_header);
+    body_length_ = std::stoi(body_header_length_);
     if (body_length_ > max_body_length)
     {
         body_length_ = 0;
@@ -54,5 +57,14 @@ char *ChatPacket::data() {
 
 ChatPacket::ChatPacket()
     : body_length_(0)
+    , sequence_index_(0)
 {
+}
+
+void ChatPacket::sequence_index(std::size_t new_sequence) {
+    sequence_index_ = new_sequence;
+}
+
+std::size_t ChatPacket::sequence_index() const {
+    return sequence_index_;
 }

@@ -3,6 +3,7 @@
 //
 
 #include "ChatClient.h"
+#include "ClientFileManager.h"
 #include <cstdlib>
 #include <deque>
 #include <iostream>
@@ -80,7 +81,16 @@ private:
         {
             if (!ec)
             {
-                packetConsumer(read_msg_);
+                auto event = CoreUtility::eventFromPacket(read_msg_);
+
+                if (event.type == ChatEvent::EventType::PARTICIPANT_SHARE_FILE) {
+                    if (ClientFileManager::getInstance().isDone(read_msg_)) {
+                        read_msg_ = ClientFileManager::getInstance().getDone(read_msg_);
+                        packetConsumer(read_msg_);
+                    }
+                } else {
+                    packetConsumer(read_msg_);
+                }
                 do_read_header();
             }
             else

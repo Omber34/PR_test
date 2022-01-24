@@ -199,6 +199,10 @@ Item
                         {
                             return model.event.user + " stood up"
                         }
+                        case ChatEvent.PARTICIPANT_SHARE_FILE:
+                        {
+                            return model.event.user + " share file: " + model.event.message.message
+                        }
                         case ChatEvent.PARTICIPANT_FILE:
                         {
                            return model.event.message.message + " was sent by " + model.event.user
@@ -213,6 +217,14 @@ Item
                 elide: Text.ElideRight
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
             }
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    chatModel.sendFile(text)
+                }
+            }
+
         }
     }
 

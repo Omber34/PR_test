@@ -7,6 +7,8 @@
 
 #include <QAbstractListModel>
 #include <QDateTime>
+#include <boost/uuid/detail/md5.hpp>
+#include <boost/algorithm/hex.hpp>
 
 struct ChatMessage{
 Q_GADGET
@@ -58,6 +60,7 @@ public:
     QString user;
     ChatMessage message;
     QDateTime occurredTime = QDateTime::currentDateTime();
+    size_t packetCount;
 };
 
 #endif //PR_TEST_CHATEVENT_H

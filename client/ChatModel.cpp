@@ -5,6 +5,7 @@
 #include "ChatModel.h"
 #include "CoreUtility.h"
 #include <QDebug>
+#include <QFileInfo>
 #include <utility>
 #include "ChatClient.h"
 
@@ -55,6 +56,12 @@ void ChatModel::addEvent(ChatEvent ev)
     if (ev.type == ChatEvent::EventType::PARTICIPANT_MESSAGE) {
         ev.message.isFromMe = ev.user == user;
     }
+    if (ev.type == ChatEvent::EventType::PARTICIPANT_SHARE_FILE) {
+        if (ev.user == user)
+            return;
+        else
+            ev.type = ChatEvent::EventType::PARTICIPANT_FILE;
+    }
     beginInsertRows(QModelIndex(), row, row);
     m_events.append(ev);
     endInsertRows();
@@ -92,6 +99,15 @@ ChatModel::~ChatModel() {
     ChatEvent chatEvent;
     chatEvent.user = user;
     chatEvent.type = ChatEvent::EventType::PARTICIPANT_LEAVE;
+
+    packetSender(CoreUtility::packetFromEvent(chatEvent));
+}
+
+void ChatModel::sendFile(const QString &msg) {
+    ChatEvent chatEvent;
+    chatEvent.user = user;
+    chatEvent.type = ChatEvent::EventType::PARTICIPANT_SHARE_FILE;
+    chatEvent.message = {msg, true};
 
     packetSender(CoreUtility::packetFromEvent(chatEvent));
 }

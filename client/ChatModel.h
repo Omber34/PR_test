@@ -39,6 +39,7 @@ public:
 
 
     Q_INVOKABLE void sendMessage(const QString &msg);
+    Q_INVOKABLE void sendFile(const QString& msg);
 
 public slots:
     void addEvent(ChatEvent ev);

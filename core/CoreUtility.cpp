@@ -3,6 +3,7 @@
 //
 
 #include "CoreUtility.h"
+#include "FileManager.h"
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QDebug>
@@ -13,6 +14,9 @@ ChatPacket CoreUtility::packetFromEvent(const ChatEvent &event) {
     eventData["type"] = static_cast<int>(event.type);
     eventData["user"] = event.user;
     eventData["message"] = event.message.message;
+    if (event.type == ChatEvent::EventType::PARTICIPANT_SHARE_FILE) {
+        eventData["packetCount"] = static_cast<int>(event.packetCount);
+    }
 
     auto doc = QJsonDocument();
     doc.setObject(eventData);
@@ -27,7 +31,7 @@ ChatPacket CoreUtility::packetFromEvent(const ChatEvent &event) {
     return result;
 }
 
-ChatEvent CoreUtility::eventFromPacket(ChatPacket &packet) {
+ChatEvent CoreUtility::eventFromPacket(const ChatPacket &packet) {
     QByteArray packetData = QByteArray::fromStdString({packet.body(), packet.body_length()});
     qDebug() << "eventFromPacket"<< packetData;
     auto doc = QJsonDocument::fromJson(packetData);
@@ -39,3 +43,26 @@ ChatEvent CoreUtility::eventFromPacket(ChatPacket &packet) {
     result.message = {jsonEvent["message"].toString(), false};
     return result;
 }
+
+ChatEvent CoreUtility::eventFromFilePacket(const ChatFilePacket &packet) {
+    auto it = std::find_if(packet.packets.begin(), packet.packets.end(), [] (const ChatPacket& packet1) {
+        return packet1.sequence_index() == 0;
+    });
+    if (it != packet.packets.end()){
+        return eventFromPacket(*it);
+    }
+    return ChatEvent();
+}
+
+ChatFilePacket CoreUtility::filePacketFromEvent(ChatEvent event) {
+    auto result = FileManager::loadFileToFilePacket(event.message.message.toStdString());
+
+    event.packetCount = result.packets.size();
+    auto metainfoPacket = packetFromEvent(event);
+    metainfoPacket.sequence_index(0);
+
+    result.packets.insert(metainfoPacket);
+
+    return result;
+}
+
