@@ -82,12 +82,10 @@ private:
             if (!ec)
             {
                 auto event = CoreUtility::eventFromPacket(read_msg_);
-
-                if (event.type == ChatEvent::EventType::PARTICIPANT_SHARE_FILE) {
-                    if (ClientFileManager::getInstance().isDone(read_msg_)) {
+                if (event.type == ChatEvent::EMPTY || event.type == ChatEvent::PARTICIPANT_SHARE_FILE || event.type == ChatEvent::PARTICIPANT_FILE){
+                    if (ClientFileManager::getInstance().isDone(read_msg_))
                         read_msg_ = ClientFileManager::getInstance().getDone(read_msg_);
-                        packetConsumer(read_msg_);
-                    }
+                    packetConsumer(read_msg_);
                 } else {
                     packetConsumer(read_msg_);
                 }
@@ -134,21 +132,15 @@ private:
 ChatClient::ChatClient(QObject *parent)
     : QObject(parent)
 {
-    try
-    {
-        tcp::resolver resolver(io_context);
-        auto endpoints = resolver.resolve(defaultHost, defaultPort);
-        impl = std::make_unique<ChatClientImpl>(io_context, endpoints,
-                                                [this] (ChatPacket& packet) {
-            eventReceived(CoreUtility::eventFromPacket(packet));
-        });
+    tcp::resolver resolver(io_context);
+    auto endpoints = resolver.resolve(defaultHost, defaultPort);
+    impl = std::make_unique<ChatClientImpl>(io_context, endpoints,
+                                            [this] (ChatPacket& packet) {
+        eventReceived(CoreUtility::eventFromPacket(packet));
+    });
 
-        ioContextThread = std::thread([this](){ io_context.run(); });
-    }
-    catch (std::exception& e)
-    {
-        printf("Exception: %s\n", e.what());
-    }
+    ioContextThread = std::thread([this](){ io_context.run(); });
+
 }
 
 void ChatClient::SendPacket(ChatPacket packet)

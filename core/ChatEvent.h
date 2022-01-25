@@ -7,8 +7,6 @@
 
 #include <QAbstractListModel>
 #include <QDateTime>
-#include <boost/uuid/detail/md5.hpp>
-#include <boost/algorithm/hex.hpp>
 
 struct ChatMessage{
 Q_GADGET
@@ -36,6 +34,7 @@ struct ChatEvent
 
 public:
     enum EventType {
+        EMPTY = -1,
         PARTICIPANT_MESSAGE,
         PARTICIPANT_FILE,
         PARTICIPANT_JOIN,
@@ -56,11 +55,11 @@ public:
         return occurredTime.toString("hh:mm ap");
     }
 
-    EventType type;
+    EventType type = EventType::EMPTY;
     QString user;
     ChatMessage message;
     QDateTime occurredTime = QDateTime::currentDateTime();
-    size_t packetCount;
+    size_t packetCount = 0;
 };
 
 #endif //PR_TEST_CHATEVENT_H

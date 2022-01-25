@@ -11,9 +11,10 @@
 
 class ChatPacket {
 public:
+    enum { event_id_length = 4 };
     enum { sequence_length = 4 };
-    enum { body_header_length = 4 };
-    enum { header_length = sequence_length + body_header_length};
+    enum { payload_size_length = 4 };
+    enum { header_length = event_id_length + sequence_length + payload_size_length };
     enum { max_body_length = 1024 };
 
     ChatPacket();
@@ -39,11 +40,14 @@ public:
     void sequence_index(std::size_t new_sequence);
     std::size_t sequence_index() const;
 
+    void event_id(std::size_t new_id);
+    std::size_t event_id() const;
 
 private:
     char data_[header_length + max_body_length]{};
     std::size_t body_length_;
     std::size_t sequence_index_;
+    std::size_t event_id_;
 };
 
 

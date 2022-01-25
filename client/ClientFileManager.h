@@ -23,7 +23,7 @@ private:
 
     void startNewFile(ChatPacket &packet);
     bool continueFile(ChatPacket &packet);
-    std::unordered_map<std::string, ChatFilePacket> unfinishedFiles;
+    std::unordered_map<size_t, ChatFilePacket> unfinishedFiles;
 };
 
 

@@ -10,15 +10,18 @@ const char *ChatPacket::data() const {
 
 void ChatPacket::encode_header() {
     char header[header_length + 1] = "";
-    std::sprintf(header, "%4d%4d", static_cast<int>(body_length_), static_cast<int>(sequence_index_));
+    std::sprintf(header, "%4d%4d%4d", static_cast<int>(event_id_), static_cast<int>(sequence_index_), static_cast<int>(body_length_));
     std::memcpy(data_, header, header_length);
 }
 
 bool ChatPacket::decode_header() {
+    char event_id_header[event_id_length + 1] = "";
     char sequence_header[sequence_length + 1] = "";
-    char body_header_length_[body_header_length + 1] = "";
-    std::strncat(sequence_header, data_, sequence_length);
-    std::strncat(body_header_length_, data_ + sequence_length, body_header_length);
+    char body_header_length_[payload_size_length + 1] = "";
+    std::strncat(event_id_header, data_, event_id_length);
+    std::strncat(sequence_header, data_ + event_id_length, sequence_length);
+    std::strncat(body_header_length_, data_ + event_id_length + sequence_length, payload_size_length);
+    event_id(std::stoi(event_id_header));
     sequence_index_ = std::stoi(sequence_header);
     body_length_ = std::stoi(body_header_length_);
     if (body_length_ > max_body_length)
@@ -58,6 +61,7 @@ char *ChatPacket::data() {
 ChatPacket::ChatPacket()
     : body_length_(0)
     , sequence_index_(0)
+    , event_id_(0)
 {
 }
 
@@ -67,4 +71,12 @@ void ChatPacket::sequence_index(std::size_t new_sequence) {
 
 std::size_t ChatPacket::sequence_index() const {
     return sequence_index_;
+}
+
+void ChatPacket::event_id(std::size_t new_id) {
+    event_id_ = new_id;
+}
+
+std::size_t ChatPacket::event_id() const {
+    return event_id_;
 }

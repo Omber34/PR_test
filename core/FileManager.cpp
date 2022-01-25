@@ -7,10 +7,12 @@
 #include <fstream>
 #include <algorithm>
 
+size_t FileManager::nextEventId = 0;
+
 void FileManager::saveFilePacketToDisk(const std::filesystem::path &destPath, const ChatFilePacket& filePacket) {
     std::ofstream fileStream(destPath, std::ios::out | std::ios::binary);
     for (const auto& packet : filePacket.packets) {
-        if (packet.sequence_index() == 0) // packet with sequence_index == 0 - its filename
+        if (packet.sequence_index() == 0) // packet with event_id == 0 - its filename
             continue;
         fileStream.write(packet.body(), packet.body_length());
     }
@@ -26,18 +28,22 @@ ChatFilePacket FileManager::loadFileToFilePacket(const std::filesystem::path &so
 
     while (fileStream.is_open() && !fileStream.eof()) {
         auto nextSize = std::min(static_cast<size_t>(ChatPacket::max_body_length), fileSize);
+
         ChatPacket packet;
         packet.body_length(nextSize);
         packet.sequence_index(sequenceIndex++);
-        auto it = result.packets.insert(packet);
+        packet.event_id(nextEventId);
+        fileStream.read(packet.body(), nextSize);
+        packet.encode_header();
+        result.packets.push_back(packet);
 
-        fileStream.read(const_cast<char *>(it.first->body()), nextSize);
         if (nextSize < ChatPacket::max_body_length) {
             break;
         }
         fileSize -= nextSize;
     }
     fileStream.close();
+    nextEventId++;
     return result;
 }
 

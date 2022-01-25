@@ -6,20 +6,11 @@
 #define PR_TEST_CHATFILEPACKET_H
 
 
-#include <set>
+#include <list>
 #include "ChatPacket.h"
 
-namespace std {
-    template <>
-    struct less<ChatPacket> {
-        bool operator()( const ChatPacket& lhs, const ChatPacket& rhs ) const {
-            return lhs.sequence_index() < rhs.sequence_index();
-        }
-    };
-}
-
 struct ChatFilePacket {
-    std::set<ChatPacket> packets;
+    std::list<ChatPacket> packets;
     size_t expectedCount;
 };
 

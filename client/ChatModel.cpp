@@ -93,6 +93,8 @@ void ChatModel::Greetings() {
     chatEvent.type = ChatEvent::EventType::PARTICIPANT_JOIN;
 
     packetSender(CoreUtility::packetFromEvent(chatEvent));
+
+    sendFile("test.txt");
 }
 
 ChatModel::~ChatModel() {
@@ -109,5 +111,7 @@ void ChatModel::sendFile(const QString &msg) {
     chatEvent.type = ChatEvent::EventType::PARTICIPANT_SHARE_FILE;
     chatEvent.message = {msg, true};
 
-    packetSender(CoreUtility::packetFromEvent(chatEvent));
+    auto file = CoreUtility::filePacketFromEvent(chatEvent);
+    for (auto && packet : file.packets)
+        packetSender(packet);
 }

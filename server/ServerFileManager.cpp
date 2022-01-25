@@ -6,7 +6,7 @@
 #include "ServerFileManager.h"
 
 bool ServerFileManager::isDone(ChatPacket &packet) {
-    if (packet.sequence_index() == 0) {
+    if (packet.event_id() == 0) {
         startNewFile(packet);
         return false;
     }

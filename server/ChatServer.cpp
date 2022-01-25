@@ -187,18 +187,11 @@ private:
 };
 
 ChatServer::ChatServer() {
-    try
-    {
-        boost::asio::io_context io_context;
+    boost::asio::io_context io_context;
 
-        std::list<chat_server> servers;
-        tcp::endpoint endpoint(tcp::v4(), std::stoi(defaultPort));
-        servers.emplace_back(io_context, endpoint);
+    std::list<chat_server> servers;
+    tcp::endpoint endpoint(tcp::v4(), std::stoi(defaultPort));
+    servers.emplace_back(io_context, endpoint);
 
-        io_context.run();
-    }
-    catch (std::exception& e)
-    {
-        printf("Exception: %s\n", e.what());
-    }
+    io_context.run();
 }

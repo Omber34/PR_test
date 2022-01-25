@@ -16,6 +16,8 @@ public:
 
 
     virtual ~FileManager() = 0 {};
+private:
+    static size_t nextEventId;
 };
 
 

@@ -14,7 +14,7 @@ ChatPacket CoreUtility::packetFromEvent(const ChatEvent &event) {
     eventData["type"] = static_cast<int>(event.type);
     eventData["user"] = event.user;
     eventData["message"] = event.message.message;
-    if (event.type == ChatEvent::EventType::PARTICIPANT_SHARE_FILE) {
+    if (event.packetCount != 0) {
         eventData["packetCount"] = static_cast<int>(event.packetCount);
     }
 
@@ -38,9 +38,10 @@ ChatEvent CoreUtility::eventFromPacket(const ChatPacket &packet) {
     auto jsonEvent = doc.object();
 
     ChatEvent result;
-    result.type = static_cast<ChatEvent::EventType>(jsonEvent["type"].toInt());
+    result.type = static_cast<ChatEvent::EventType>(jsonEvent["type"].toInt(-1));
     result.user = jsonEvent["user"].toString();
     result.message = {jsonEvent["message"].toString(), false};
+    result.packetCount = jsonEvent["packetCount"].toInt(0);
     return result;
 }
 
@@ -57,11 +58,12 @@ ChatEvent CoreUtility::eventFromFilePacket(const ChatFilePacket &packet) {
 ChatFilePacket CoreUtility::filePacketFromEvent(ChatEvent event) {
     auto result = FileManager::loadFileToFilePacket(event.message.message.toStdString());
 
-    event.packetCount = result.packets.size();
+    result.expectedCount = result.packets.size() + 1;
+    event.packetCount = result.packets.size() + 1;
     auto metainfoPacket = packetFromEvent(event);
     metainfoPacket.sequence_index(0);
 
-    result.packets.insert(metainfoPacket);
+    result.packets.push_front(metainfoPacket);
 
     return result;
 }

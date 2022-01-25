@@ -1,4 +1,4 @@
-add_executable(ChatServer server.cpp ChatServer.cpp ChatServer.h ServerFileManager.cpp ServerFileManager.h)
+add_executable(ChatServer server.cpp ChatServer.cpp ChatServer.h)
 
 target_link_libraries(ChatServer core)
 target_link_libraries(ChatServer ${Boost_LIBRARIES})

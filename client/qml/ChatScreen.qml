@@ -208,6 +208,7 @@ Item
                            return model.event.message.message + " was sent by " + model.event.user
                         }
                     }
+                    console.log(model.event.type)
                     return "Undefined event type"
                 }
 
@@ -221,7 +222,8 @@ Item
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
-                    chatModel.sendFile(text)
+                    if (model.event.type == PARTICIPANT_FILE || model.event.type == PARTICIPANT_SHARE_FILE)
+                        chatModel.sendFile(model.event.message.message)
                 }
             }
 
