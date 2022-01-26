@@ -13,6 +13,8 @@ public:
     static ClientFileManager& getInstance();
     bool isDone(ChatPacket &packet);
     ChatPacket getDone(ChatPacket &packet);
+    std::string getDownloadFilename(const ChatEvent &event);
+    std::string getDownloadFilename(const ChatPacket &packet);
 
 private:
     ClientFileManager() = default;

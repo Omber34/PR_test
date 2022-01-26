@@ -5,9 +5,10 @@
 #include "ChatModel.h"
 #include "CoreUtility.h"
 #include <QDebug>
+#include <QDesktopServices>
 #include <QFileInfo>
-#include <utility>
 #include "ChatClient.h"
+#include "ClientFileManager.h"
 
 ChatModel::ChatModel(QObject *parent)
     : QAbstractListModel(parent)
@@ -57,10 +58,8 @@ void ChatModel::addEvent(ChatEvent ev)
         ev.message.isFromMe = ev.user == user;
     }
     if (ev.type == ChatEvent::EventType::PARTICIPANT_SHARE_FILE) {
-        if (ev.user == user)
-            return;
-        else
-            ev.type = ChatEvent::EventType::PARTICIPANT_FILE;
+        ev.type = ChatEvent::EventType::PARTICIPANT_FILE;
+        ev.message.message = QString::fromStdString(ClientFileManager::getInstance().getDownloadFilename(ev));
     }
     beginInsertRows(QModelIndex(), row, row);
     m_events.append(ev);
@@ -93,8 +92,6 @@ void ChatModel::Greetings() {
     chatEvent.type = ChatEvent::EventType::PARTICIPANT_JOIN;
 
     packetSender(CoreUtility::packetFromEvent(chatEvent));
-
-    sendFile("test.txt");
 }
 
 ChatModel::~ChatModel() {
@@ -109,9 +106,14 @@ void ChatModel::sendFile(const QString &msg) {
     ChatEvent chatEvent;
     chatEvent.user = user;
     chatEvent.type = ChatEvent::EventType::PARTICIPANT_SHARE_FILE;
-    chatEvent.message = {msg, true};
+    chatEvent.message = {msg.mid(8), true};
 
     auto file = CoreUtility::filePacketFromEvent(chatEvent);
     for (auto && packet : file.packets)
         packetSender(packet);
+}
+
+void ChatModel::openFile(const QString &msg) {
+    QFileInfo info(msg);
+    QDesktopServices::openUrl(QUrl("file:///" + info.absoluteFilePath(), QUrl::TolerantMode));
 }

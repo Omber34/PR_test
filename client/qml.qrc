@@ -7,6 +7,7 @@
 
     <qresource  prefix="/">
         <file alias="send_message.svg">../images/send_message.svg</file>
+        <file alias="attach_file.svg">../images/attach_file.svg</file>
         <file alias="file.svg">../images/file.svg</file>
         <file alias="user.svg">../images/user.svg</file>
     </qresource>

@@ -4,6 +4,8 @@
 
 #include <CoreUtility.h>
 #include <FileManager.h>
+#include <iostream>
+#include <QFileInfo>
 #include "ClientFileManager.h"
 
 bool ClientFileManager::isDone(ChatPacket &packet) {
@@ -20,7 +22,7 @@ bool ClientFileManager::isDone(ChatPacket &packet) {
 ChatPacket ClientFileManager::getDone(ChatPacket &packet) {
     auto node = unfinishedFiles.extract(packet.event_id());
 
-    FileManager::saveFilePacketToDisk("D:\\test.txt", node.mapped());
+    FileManager::saveFilePacketToDisk(getDownloadFilename(node.mapped().packets.front()), node.mapped());
     return *node.mapped().packets.begin();
 }
 
@@ -43,4 +45,17 @@ bool ClientFileManager::continueFile(ChatPacket &packet) {
 ClientFileManager &ClientFileManager::getInstance() {
     static ClientFileManager instance;
     return instance;
+}
+
+std::string ClientFileManager::getDownloadFilename(const ChatEvent &event) {
+    auto downloadPath = std::filesystem::path(event.user.toStdString());
+    std::filesystem::create_directories(downloadPath);
+    QFileInfo info(event.message.message);
+    downloadPath.append(info.fileName().toStdString());
+
+    return downloadPath.string();
+}
+
+std::string ClientFileManager::getDownloadFilename(const ChatPacket &packet) {
+    return getDownloadFilename(CoreUtility::eventFromPacket(packet));
 }

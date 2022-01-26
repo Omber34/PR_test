@@ -82,7 +82,7 @@ private:
             if (!ec)
             {
                 auto event = CoreUtility::eventFromPacket(read_msg_);
-                if (event.type == ChatEvent::EMPTY || event.type == ChatEvent::PARTICIPANT_SHARE_FILE || event.type == ChatEvent::PARTICIPANT_FILE){
+                if (event.type == ChatEvent::EMPTY || event.type == ChatEvent::PARTICIPANT_SHARE_FILE){
                     if (ClientFileManager::getInstance().isDone(read_msg_))
                         read_msg_ = ClientFileManager::getInstance().getDone(read_msg_);
                     packetConsumer(read_msg_);

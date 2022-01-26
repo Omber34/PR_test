@@ -2,6 +2,7 @@ import QtQuick 2.9
 import QtQuick.Templates 2.2 as T
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.2
+import QtQuick.Dialogs 1.2
 import QtGraphicalEffects 1.0
 import models 1.0
 import enums 1.0
@@ -116,11 +117,37 @@ Item
 
             Text
             {
+                id: usernameText
+                visible: (model.event.type === ChatEvent.PARTICIPANT_MESSAGE) && (!model.event.message.isFromMe)
+
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.topMargin: 5
+
+                text: model.event.user
+                color: "blue"
+                elide: Text.ElideRight
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+
+
+                Component.onCompleted:
+                {
+                    if (!model.event.message.isFromMe)
+                    {
+                        anchors.leftMargin = 5
+                        horizontalAlignment = Text.AlignLeft
+                    }
+                }
+            }
+
+            Text
+            {
                 id: msgText
 
                 visible: model.event.type === ChatEvent.PARTICIPANT_MESSAGE
                 anchors.top: parent.top
                 anchors.topMargin: 5
+                anchors.left: usernameText.right
 
                 text: model.event.message.message
                 color: "lightblue"
@@ -134,7 +161,6 @@ Item
                 {
                     if (!model.event.message.isFromMe)
                     {
-                        anchors.left = imgRect.right
                         anchors.leftMargin = 5
                         horizontalAlignment = Text.AlignLeft
                     }
@@ -208,7 +234,6 @@ Item
                            return model.event.message.message + " was sent by " + model.event.user
                         }
                     }
-                    console.log(model.event.type)
                     return "Undefined event type"
                 }
 
@@ -217,13 +242,13 @@ Item
                 horizontalAlignment: Text.AlignHCenter
                 elide: Text.ElideRight
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-            }
 
-            MouseArea {
-                anchors.fill: parent
-                onClicked: {
-                    if (model.event.type == PARTICIPANT_FILE || model.event.type == PARTICIPANT_SHARE_FILE)
-                        chatModel.sendFile(model.event.message.message)
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        if (model.event.type == ChatEvent.PARTICIPANT_FILE)
+                            chatModel.openFile(model.event.message.message)
+                    }
                 }
             }
 
@@ -249,7 +274,7 @@ Item
     {
         id: msgSendButton
         anchors.bottom: parent.bottom
-        anchors.right: parent.right
+        anchors.right: fileSendButton.left
 
         width: 50
         height: 50
@@ -269,11 +294,45 @@ Item
         }
     }
 
+    T.Button
+    {
+        id: fileSendButton
+
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+
+        width: 50
+        height: 50
+
+        Image
+        {
+            anchors.fill: parent
+            sourceSize.width: width
+            sourceSize.height: height
+            source: "qrc:/attach_file.svg"
+        }
+
+        onClicked:
+        {
+            fileDialog.open()
+        }
+    }
+
+    FileDialog {
+        id: fileDialog
+        title: "Please choose a file"
+        folder: shortcuts.home
+        selectMultiple: false
+
+        onAccepted: {
+            chatModel.sendFile(fileDialog.fileUrl)
+        }
+    }
+
     function sendMessage(text)
     {
         if (text.trim() === "")
             return;
-        console.log("Sending text: " + text)
         chatModel.sendMessage(text)
     }
 }

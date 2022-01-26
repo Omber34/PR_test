@@ -20,7 +20,7 @@ ChatPacket CoreUtility::packetFromEvent(const ChatEvent &event) {
 
     auto doc = QJsonDocument();
     doc.setObject(eventData);
-    std::string buff = doc.toJson().toStdString();
+    std::string buff = doc.toJson(QJsonDocument::Compact).toStdString();
     const char* packetData = buff.data();
     qDebug() << "packetFromEvent" << doc.toJson(QJsonDocument::Compact);
     ChatPacket result;
@@ -62,6 +62,8 @@ ChatFilePacket CoreUtility::filePacketFromEvent(ChatEvent event) {
     event.packetCount = result.packets.size() + 1;
     auto metainfoPacket = packetFromEvent(event);
     metainfoPacket.sequence_index(0);
+    metainfoPacket.event_id(result.packets.front().event_id());
+    metainfoPacket.encode_header();
 
     result.packets.push_front(metainfoPacket);
 
