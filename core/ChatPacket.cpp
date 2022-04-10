@@ -16,7 +16,6 @@ void ChatPacket::encode_header() {
 }
 
 bool ChatPacket::decode_header() {
-    printf("%s\n", reinterpret_cast<char*>(data_.get()));
     event_id_ = reinterpret_cast<uint32_t*>(data_.get())[0];
     sequence_index_ = reinterpret_cast<uint32_t*>(data_.get())[1];
     body_length_ = reinterpret_cast<uint32_t*>(data_.get())[2];

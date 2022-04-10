@@ -42,6 +42,9 @@ ChatEvent CoreUtility::eventFromPacket(const ChatPacket &packet) {
     result.user = jsonEvent["user"].toString();
     result.message = {jsonEvent["message"].toString(), false};
     result.packetCount = jsonEvent["packetCount"].toInt(0);
+    if (jsonEvent.contains("message")){
+        result.type = ChatEvent::PARTICIPANT_MESSAGE;
+    }
     return result;
 }
 
