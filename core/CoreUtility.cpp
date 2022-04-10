@@ -13,28 +13,28 @@ ChatPacket CoreUtility::packetFromEvent(const ChatEvent &event) {
     QJsonObject eventData;
     eventData["type"] = static_cast<int>(event.type);
     eventData["user"] = event.user;
-    eventData["message"] = event.message.message;
+    if (!event.message.message.isEmpty()) {
+        eventData["message"] = event.message.message;
+    }
     if (event.packetCount != 0) {
         eventData["packetCount"] = static_cast<int>(event.packetCount);
     }
 
     auto doc = QJsonDocument();
     doc.setObject(eventData);
-    std::string buff = doc.toJson(QJsonDocument::Compact).toStdString();
-    const char* packetData = buff.data();
-    qDebug() << "packetFromEvent" << doc.toJson(QJsonDocument::Compact);
+//    qDebug() << "packetFromEvent" << doc.toJson(QJsonDocument::Compact);
+    QByteArray json = doc.toJson(QJsonDocument::Compact);
     ChatPacket result;
-    result.body_length(std::strlen(packetData));
-    std::memcpy(result.body(), packetData, result.body_length());
+    result.body_length(json.size());
+    std::copy(json.begin(), json.end(), result.body());
     result.encode_header();
 
     return result;
 }
 
 ChatEvent CoreUtility::eventFromPacket(const ChatPacket &packet) {
-    QByteArray packetData = QByteArray::fromStdString({reinterpret_cast<const char*>(packet.body()), packet.body_length()});
-    //qDebug() << "eventFromPacket"<< packetData;
-    auto doc = QJsonDocument::fromJson(packetData);
+    QByteArray bytes = QByteArray::fromRawData(reinterpret_cast<const char*>(packet.body()), packet.body_length());
+    auto doc = QJsonDocument::fromJson(bytes);
     auto jsonEvent = doc.object();
 
     ChatEvent result;
@@ -42,9 +42,7 @@ ChatEvent CoreUtility::eventFromPacket(const ChatPacket &packet) {
     result.user = jsonEvent["user"].toString();
     result.message = {jsonEvent["message"].toString(), false};
     result.packetCount = jsonEvent["packetCount"].toInt(0);
-    if (jsonEvent.contains("message")){
-        result.type = ChatEvent::PARTICIPANT_MESSAGE;
-    }
+    result.type = ChatEvent::PARTICIPANT_MESSAGE;
     return result;
 }
 
