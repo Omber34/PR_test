@@ -32,8 +32,8 @@ ChatPacket CoreUtility::packetFromEvent(const ChatEvent &event) {
 }
 
 ChatEvent CoreUtility::eventFromPacket(const ChatPacket &packet) {
-    QByteArray packetData = QByteArray::fromStdString({packet.body(), packet.body_length()});
-    qDebug() << "eventFromPacket"<< packetData;
+    QByteArray packetData = QByteArray::fromStdString({reinterpret_cast<const char*>(packet.body()), packet.body_length()});
+    //qDebug() << "eventFromPacket"<< packetData;
     auto doc = QJsonDocument::fromJson(packetData);
     auto jsonEvent = doc.object();
 

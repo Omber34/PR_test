@@ -14,7 +14,7 @@ void FileManager::saveFilePacketToDisk(const std::filesystem::path &destPath, co
     for (const auto& packet : filePacket.packets) {
         if (packet.sequence_index() == 0) // packet with event_id == 0 - its filename
             continue;
-        fileStream.write(packet.body(), packet.body_length());
+        fileStream.write(reinterpret_cast<const char*>(packet.body()), packet.body_length());
     }
 }
 
@@ -33,7 +33,7 @@ ChatFilePacket FileManager::loadFileToFilePacket(const std::filesystem::path &so
         packet.body_length(nextSize);
         packet.sequence_index(sequenceIndex++);
         packet.event_id(nextEventId);
-        fileStream.read(packet.body(), nextSize);
+        fileStream.read(reinterpret_cast<char*>(packet.body()), nextSize);
         packet.encode_header();
         result.packets.push_back(packet);
 
@@ -55,6 +55,4 @@ std::string FileManager::generateNewFileName(const ChatFilePacket &filePacket) {
     if (filePacket.packets.empty())
         return "";
     return generateNewFileName(CoreUtility::eventFromFilePacket(filePacket));
-
-
 }
