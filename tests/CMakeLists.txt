@@ -7,7 +7,7 @@ target_include_directories(core_tests PUBLIC ../core)
 target_link_libraries(core_tests gtest gtest_main core)
 
 
-add_executable(client_tests  client_tests.cpp QObjectTestHelper.h)
+add_executable(client_tests  client_tests.cpp QObjectTestHelper.h TestClient.h)
 target_include_directories(client_tests PRIVATE ${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 target_include_directories(core_tests PUBLIC ../core)
 target_include_directories(core_tests PUBLIC ../client)

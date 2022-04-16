@@ -6,11 +6,13 @@
 #define PR_TEST_ICHATCLIENT_H
 
 #include <QObject>
+#include "ChatEvent.h"
 
 class IChatClient : public QObject {
+    Q_OBJECT
 public:
 public slots:
-    virtual void SendEvent(const ChatEvent event) = 0;
+    virtual void SendEvent(ChatEvent event) = 0;
 
 signals:
     void eventReceived(ChatEvent);

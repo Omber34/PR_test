@@ -10,10 +10,11 @@
 class QObjectTestHelper : public QObject {
     Q_OBJECT
 public slots:
-    void testSlot(QString name) {
+    void testSlot(const QString& name) {
         counters[name]++;
     }
 
+public:
     std::map<QString, uint32_t> counters;
 
 };

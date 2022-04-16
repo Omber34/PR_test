@@ -5,27 +5,23 @@
 #ifndef PR_TEST_CHATMODEL_H
 #define PR_TEST_CHATMODEL_H
 
-
 #include <QAbstractListModel>
 #include <QtCore/QDateTime>
-#include <QSet>
 #include <utility>
-
 #include "ChatEvent.h"
-#include "ChatPacket.h"
+#include "IChatClient.h"
 
 class ChatModel : public QAbstractListModel
 {
     Q_OBJECT
-
+public:
     enum
     {
         eEventRole = Qt::UserRole + 1,
     };
-public:
     Q_PROPERTY(QString user READ getUser WRITE setUser)
 
-    explicit ChatModel(QObject *parent = nullptr);
+    explicit ChatModel(IChatClient &client, QObject *parent = nullptr);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
@@ -36,7 +32,6 @@ public:
     const QString &getUser() const;
 
     void setUser(const QString &_user);
-
 
     Q_INVOKABLE void sendMessage(const QString &msg);
     Q_INVOKABLE void sendFile(const QString& msg);
@@ -53,9 +48,9 @@ public:
     void Greetings();
 
 private:
+    IChatClient& client;
     QList<ChatEvent> m_events;
     QString user;
-    std::function<void(ChatEvent)> eventSender;
 };
 
 #endif //PR_TEST_CHATMODEL_H

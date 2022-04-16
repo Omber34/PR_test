@@ -8,25 +8,19 @@
 #include <memory>
 #include <thread>
 
-#include <QObject>
-#include <QQmlEngine>
-#include <QJSEngine>
-
 #include <boost/asio.hpp>
 
 #include "ChatPacket.h"
 #include "ChatModel.h"
 #include "CoreUtility.h"
 #include "IChatClient.h"
+#include "ClientFileManager.h"
 
 class ChatClient : public IChatClient {
     Q_OBJECT
 public slots:
-    void SendEvent(ChatEvent event);
-
-signals:
-    void eventReceived(ChatEvent);
-
+    void SendEvent(ChatEvent event) Q_DECL_OVERRIDE;
+    
 public:
     void Disconnect();
 
@@ -42,6 +36,8 @@ private:
     explicit ChatClient();
 
     void consumePacket(ChatPacket packet);
+
+    ClientFileManager fileManager;
 
     boost::asio::io_context io_context;
     std::thread ioContextThread;

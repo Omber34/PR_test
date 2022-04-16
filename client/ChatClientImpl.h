@@ -19,13 +19,13 @@ public:
         do_connect(endpoints);
     }
 
-    void write(const ChatPacket& msg)
+    void write(ChatPacket msg)
     {
         boost::asio::post(io_context_,
-                          [this, msg]()
+                          [this, msg=std::move(msg)]() mutable
                           {
                               bool write_in_progress = !write_msgs_.empty();
-                              write_msgs_.push_back(msg);
+                              write_msgs_.emplace_back(std::move(msg));
                               if (!write_in_progress)
                               {
                                   do_write();

@@ -3,20 +3,16 @@
 //
 
 #include "ChatModel.h"
-#include <QDebug>
+#include <QQmlEngine>
 #include <QDesktopServices>
 #include <QFileInfo>
 #include "ChatClient.h"
 
-ChatModel::ChatModel(QObject *parent)
+ChatModel::ChatModel(IChatClient &client, QObject *parent)
     : QAbstractListModel(parent)
+    , client(client)
 {
-    QObject::connect(&ChatClient::getInstance(), &ChatClient::eventReceived, this, &ChatModel::addEvent);
-
-    eventSender = [] (ChatEvent packet) {
-        ChatClient::getInstance().SendEvent(std::move(packet));
-    };
-
+    QObject::connect(&client, &IChatClient::eventReceived, this, &ChatModel::addEvent);
 }
 
 QHash<int, QByteArray> ChatModel::roleNames() const
@@ -77,7 +73,7 @@ void ChatModel::sendMessage(const QString &msg) {
     newEvent.message = {msg, true};
     newEvent.user = ChatModel::user;
 
-    eventSender(newEvent);
+    client.SendEvent(newEvent);
 }
 
 void ChatModel::Greetings() {
@@ -85,7 +81,7 @@ void ChatModel::Greetings() {
     chatEvent.user = user;
     chatEvent.type = ChatEvent::EventType::PARTICIPANT_JOIN;
 
-    eventSender(chatEvent);
+    client.SendEvent(chatEvent);
 }
 
 ChatModel::~ChatModel() {
@@ -93,16 +89,17 @@ ChatModel::~ChatModel() {
     chatEvent.user = user;
     chatEvent.type = ChatEvent::EventType::PARTICIPANT_LEAVE;
 
-    eventSender(chatEvent);
+    client.SendEvent(chatEvent);
 }
 
 void ChatModel::sendFile(const QString &msg) {
     ChatEvent chatEvent;
     chatEvent.user = user;
     chatEvent.type = ChatEvent::EventType::PARTICIPANT_SHARE_FILE;
-    chatEvent.message = {msg.mid(8), true};
+    auto filename = msg.contains("file:///") ? msg.mid(8) : msg;
+    chatEvent.message = {filename, true};
 
-    eventSender(chatEvent);
+    client.SendEvent(chatEvent);
 }
 
 void ChatModel::openFile(const QString &msg) {

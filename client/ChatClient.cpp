@@ -3,7 +3,6 @@
 //
 
 #include "ChatClient.h"
-#include "ClientFileManager.h"
 #include "ChatClientImpl.h"
 #include "CoreUtility.h"
 
@@ -37,13 +36,14 @@ ChatClient& ChatClient::getInstance() {
 void ChatClient::consumePacket(ChatPacket packet) {
     auto event = CoreUtility::eventFromPacket(packet);
     if (event.type == ChatEvent::EMPTY || event.type == ChatEvent::PARTICIPANT_SHARE_FILE) {
-        if (ClientFileManager::getInstance().isDone(packet)) {
-            eventReceived(CoreUtility::eventFromPacket(ClientFileManager::getInstance().getDone(packet)));
+        auto optFileEvent = fileManager.process(packet);
+        if (optFileEvent) {
+            eventReceived(CoreUtility::eventFromPacket(*optFileEvent));
         }
     }
     if (event.type == ChatEvent::EventType::PARTICIPANT_SHARE_FILE) {
         event.type = ChatEvent::EventType::PARTICIPANT_FILE;
-        event.message.message = QString::fromStdString(ClientFileManager::getInstance().getDownloadFilename(event));
+        event.message.message = QString::fromStdString(fileManager.getDownloadFilename(event));
     }
     eventReceived(event);
 }
@@ -52,7 +52,7 @@ void ChatClient::SendEvent(ChatEvent event) {
     if (event.type == ChatEvent::PARTICIPANT_SHARE_FILE) {
         auto file = CoreUtility::filePacketFromEvent(event);
         for (auto &&packet : file.packets)
-            impl->write(packet);
+            impl->write(std::move(packet));
         return;
     }
     impl->write(CoreUtility::packetFromEvent(event));

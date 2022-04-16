@@ -5,30 +5,32 @@
 #include "gtest/gtest.h"
 #include "../client/ChatModel.h"
 #include "QObjectTestHelper.h"
-#include "../client/ChatClient.h"
+#include "TestClient.h"
 
 #ifndef PR_TEST_CHATMODELTEST_H
 #define PR_TEST_CHATMODELTEST_H
 
 class ChatModelTest : public testing::Test {
+public:
+    ChatModelTest()
+    : model(client)
+    {}
+
 protected:
     void SetUp() override {
         QObject::connect(&model, &ChatModel::eventAdded, [this] (){
                helper.testSlot("eventAdded");
         });
 
-        packetSender = [] (ChatPacket packet) {
-            ChatClient::getInstance().SendPacket(packet);
-        };
-        model.setUser("Taras");
+        model.setUser(username);
     }
 
     void TearDown() override {
     }
-
+    const char* username = "Taras";
+    TestClient client;
     ChatModel model;
     QObjectTestHelper helper;
-    std::deque<ChatPacket> sentPackets;
 };
 
 #endif //PR_TEST_CHATMODELTEST_H

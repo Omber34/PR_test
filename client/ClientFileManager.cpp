@@ -4,47 +4,33 @@
 
 #include <CoreUtility.h>
 #include <FileManager.h>
-#include <iostream>
 #include <QFileInfo>
 #include "ClientFileManager.h"
 
-bool ClientFileManager::isDone(ChatPacket &packet) {
-    if (unfinishedFiles.find(packet.event_id()) != unfinishedFiles.end()) {
-        return continueFile(packet);
+std::optional<ChatPacket>  ClientFileManager::process(ChatPacket packet)
+{
+    auto packetId = packet.event_id();
+    auto it = unfinishedFiles.find(packet.event_id());
+    if (it == unfinishedFiles.end())
+    {
+        auto headerEvent = CoreUtility::eventFromPacket(packet);
+        ChatFilePacket filePacket;
+        filePacket.expectedCount = headerEvent.packetCount;
+        unfinishedFiles[packet.event_id()] = filePacket;
+        it = unfinishedFiles.insert(std::make_pair(packetId, std::move(filePacket))).first;
     }
-    if (packet.sequence_index() == 0) {
-        startNewFile(packet);
-        return false;
+
+    auto &filePacket = it->second;
+    filePacket.packets.push_back(std::move(packet));
+
+    if (filePacket.packets.size() != filePacket.expectedCount)
+    {
+        return {};
     }
-    return false;
-}
 
-ChatPacket ClientFileManager::getDone(ChatPacket &packet) {
-    auto node = unfinishedFiles.extract(packet.event_id());
-
+    auto node = unfinishedFiles.extract(packetId);
     FileManager::saveFilePacketToDisk(getDownloadFilename(node.mapped().packets.front()), node.mapped());
     return *node.mapped().packets.begin();
-}
-
-void ClientFileManager::startNewFile(ChatPacket &packet) {
-    auto headerEvent = CoreUtility::eventFromPacket(packet);
-    ChatFilePacket filePacket;
-    filePacket.expectedCount = headerEvent.packetCount;
-    filePacket.packets.push_back(packet);
-    unfinishedFiles[packet.event_id()] = filePacket;
-}
-
-bool ClientFileManager::continueFile(ChatPacket &packet) {
-    if (unfinishedFiles.empty())
-        return false;
-    auto &filePacket = unfinishedFiles.find(packet.event_id())->second;
-    filePacket.packets.push_back(packet);
-    return filePacket.packets.size() == filePacket.expectedCount;
-}
-
-ClientFileManager &ClientFileManager::getInstance() {
-    static ClientFileManager instance;
-    return instance;
 }
 
 std::string ClientFileManager::getDownloadFilename(const ChatEvent &event) {

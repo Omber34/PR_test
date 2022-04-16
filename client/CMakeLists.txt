@@ -4,7 +4,7 @@ set ( RSC
         )
 
 QT5_ADD_RESOURCES(RSCS ${RSC})
-add_library(ChatClientLib ChatClient.cpp ChatClient.h ChatModel.cpp ChatModel.h ClientFileManager.cpp ClientFileManager.h ChatClientImpl.h)
+add_library(ChatClientLib ChatClient.cpp ChatClient.h IChatClient.h ChatModel.cpp ChatModel.h ClientFileManager.cpp ClientFileManager.h ChatClientImpl.h)
 target_include_directories(ChatClientLib PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries(ChatClientLib core)
 target_link_libraries(ChatClientLib ${Boost_LIBRARIES})
