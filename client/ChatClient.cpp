@@ -5,8 +5,6 @@
 #include "ChatClient.h"
 #include "ClientFileManager.h"
 #include <cstdlib>
-#include <deque>
-#include <iostream>
 #include <memory>
 #include <thread>
 #include <utility>
