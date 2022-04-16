@@ -26,7 +26,9 @@ protected:
     }
 
     void TearDown() override {
+        QObject::disconnect(&client,0,0,0);
     }
+
     const char* username = "Taras";
     TestClient client;
     ChatModel model;
