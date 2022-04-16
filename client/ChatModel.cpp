@@ -3,20 +3,18 @@
 //
 
 #include "ChatModel.h"
-#include "CoreUtility.h"
 #include <QDebug>
 #include <QDesktopServices>
 #include <QFileInfo>
 #include "ChatClient.h"
-#include "ClientFileManager.h"
 
 ChatModel::ChatModel(QObject *parent)
     : QAbstractListModel(parent)
 {
     QObject::connect(&ChatClient::getInstance(), &ChatClient::eventReceived, this, &ChatModel::addEvent);
 
-    packetSender = [] (ChatPacket packet) {
-        ChatClient::getInstance().SendPacket(packet);
+    eventSender = [] (ChatEvent packet) {
+        ChatClient::getInstance().SendEvent(std::move(packet));
     };
 
 }
@@ -57,10 +55,6 @@ void ChatModel::addEvent(ChatEvent ev)
     if (ev.type == ChatEvent::EventType::PARTICIPANT_MESSAGE) {
         ev.message.isFromMe = ev.user == user;
     }
-    if (ev.type == ChatEvent::EventType::PARTICIPANT_SHARE_FILE) {
-        ev.type = ChatEvent::EventType::PARTICIPANT_FILE;
-        ev.message.message = QString::fromStdString(ClientFileManager::getInstance().getDownloadFilename(ev));
-    }
     beginInsertRows(QModelIndex(), row, row);
     m_events.append(ev);
     endInsertRows();
@@ -83,7 +77,7 @@ void ChatModel::sendMessage(const QString &msg) {
     newEvent.message = {msg, true};
     newEvent.user = ChatModel::user;
 
-    packetSender(CoreUtility::packetFromEvent(newEvent));
+    eventSender(newEvent);
 }
 
 void ChatModel::Greetings() {
@@ -91,7 +85,7 @@ void ChatModel::Greetings() {
     chatEvent.user = user;
     chatEvent.type = ChatEvent::EventType::PARTICIPANT_JOIN;
 
-    packetSender(CoreUtility::packetFromEvent(chatEvent));
+    eventSender(chatEvent);
 }
 
 ChatModel::~ChatModel() {
@@ -99,7 +93,7 @@ ChatModel::~ChatModel() {
     chatEvent.user = user;
     chatEvent.type = ChatEvent::EventType::PARTICIPANT_LEAVE;
 
-    packetSender(CoreUtility::packetFromEvent(chatEvent));
+    eventSender(chatEvent);
 }
 
 void ChatModel::sendFile(const QString &msg) {
@@ -108,9 +102,7 @@ void ChatModel::sendFile(const QString &msg) {
     chatEvent.type = ChatEvent::EventType::PARTICIPANT_SHARE_FILE;
     chatEvent.message = {msg.mid(8), true};
 
-    auto file = CoreUtility::filePacketFromEvent(chatEvent);
-    for (auto && packet : file.packets)
-        packetSender(packet);
+    eventSender(chatEvent);
 }
 
 void ChatModel::openFile(const QString &msg) {

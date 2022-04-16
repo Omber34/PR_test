@@ -55,7 +55,7 @@ public:
 private:
     QList<ChatEvent> m_events;
     QString user;
-    std::function<void(ChatPacket)> packetSender;
+    std::function<void(ChatEvent)> eventSender;
 };
 
 #endif //PR_TEST_CHATMODEL_H

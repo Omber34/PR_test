@@ -17,11 +17,12 @@
 #include "ChatPacket.h"
 #include "ChatModel.h"
 #include "CoreUtility.h"
+#include "IChatClient.h"
 
-class ChatClient : public QObject {
+class ChatClient : public IChatClient {
     Q_OBJECT
 public slots:
-    void SendPacket(ChatPacket packet);
+    void SendEvent(ChatEvent event);
 
 signals:
     void eventReceived(ChatEvent);
@@ -38,7 +39,9 @@ public:
     ~ChatClient();
 
 private:
-    explicit ChatClient(QObject *parent = nullptr);
+    explicit ChatClient();
+
+    void consumePacket(ChatPacket packet);
 
     boost::asio::io_context io_context;
     std::thread ioContextThread;

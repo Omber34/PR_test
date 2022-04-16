@@ -4,146 +4,20 @@
 
 #include "ChatClient.h"
 #include "ClientFileManager.h"
-#include <cstdlib>
-#include <memory>
-#include <thread>
-#include <utility>
+#include "ChatClientImpl.h"
+#include "CoreUtility.h"
 
-using boost::asio::ip::tcp;
-
-class ChatClient::ChatClientImpl
-{
-public:
-    ChatClientImpl(boost::asio::io_context& io_context, const tcp::resolver::results_type& endpoints, std::function<void (ChatPacket&)> packetConsumer)
-    : io_context_(io_context),
-      socket_(io_context),
-      packetConsumer(std::move(packetConsumer))
-    {
-        do_connect(endpoints);
-    }
-
-    void write(const ChatPacket& msg)
-    {
-        boost::asio::post(io_context_,
-          [this, msg]()
-          {
-              bool write_in_progress = !write_msgs_.empty();
-              write_msgs_.push_back(msg);
-              if (!write_in_progress)
-              {
-                  do_write();
-              }
-          });
-    }
-
-    void close()
-    {
-        boost::asio::post(io_context_, [this]() { socket_.close(); });
-    }
-
-private:
-    void do_connect(const tcp::resolver::results_type& endpoints)
-    {
-        boost::asio::async_connect(socket_, endpoints,
-    [this](boost::system::error_code ec, const tcp::endpoint&)
-            {
-               if (!ec)
-               {
-                   do_read_header();
-               }
-            });
-    }
-
-    void do_read_header()
-    {
-        boost::asio::async_read(socket_,
-        boost::asio::buffer(read_msg_.data(), ChatPacket::header_length),
-        [this](boost::system::error_code ec, std::size_t /*length*/)
-        {
-            if (!ec && read_msg_.decode_header())
-            {
-                do_read_body();
-            }
-            else
-            {
-                socket_.close();
-            }
-        });
-    }
-
-    void do_read_body()
-    {
-    boost::asio::async_read(socket_,
-        boost::asio::buffer(read_msg_.body(), read_msg_.body_length()),
-        [this](boost::system::error_code ec, std::size_t /*length*/)
-        {
-            if (!ec)
-            {
-                auto event = CoreUtility::eventFromPacket(read_msg_);
-                if (event.type == ChatEvent::EMPTY || event.type == ChatEvent::PARTICIPANT_SHARE_FILE){
-                    if (ClientFileManager::getInstance().isDone(read_msg_))
-                        read_msg_ = ClientFileManager::getInstance().getDone(read_msg_);
-                    packetConsumer(read_msg_);
-                } else {
-                    packetConsumer(read_msg_);
-                }
-                do_read_header();
-            }
-            else
-            {
-                socket_.close();
-            }
-        });
-    }
-
-    void do_write()
-    {
-    boost::asio::async_write(socket_,
-         boost::asio::buffer(write_msgs_.front().data(),
-                             write_msgs_.front().length()),
-         [this](boost::system::error_code ec, std::size_t /*length*/)
-         {
-             if (!ec)
-             {
-                 write_msgs_.pop_front();
-                 if (!write_msgs_.empty())
-                 {
-                     do_write();
-                 }
-             }
-             else
-             {
-                 socket_.close();
-             }
-         });
-    }
-
-private:
-    boost::asio::io_context& io_context_;
-    tcp::socket socket_;
-    ChatPacket read_msg_;
-    ChatPacketQueue write_msgs_;
-    std::function<void (ChatPacket&)> packetConsumer;
-};
-
-
-ChatClient::ChatClient(QObject *parent)
-    : QObject(parent)
+ChatClient::ChatClient()
 {
     tcp::resolver resolver(io_context);
     auto endpoints = resolver.resolve(defaultHost, defaultPort);
     impl = std::make_unique<ChatClientImpl>(io_context, endpoints,
-                                            [this] (ChatPacket& packet) {
-        eventReceived(CoreUtility::eventFromPacket(packet));
+                                            [this] (ChatPacket&& packet) {
+                                                consumePacket(std::move(packet));
     });
 
     ioContextThread = std::thread([this](){ io_context.run(); });
 
-}
-
-void ChatClient::SendPacket(ChatPacket packet)
-{
-    impl->write(packet);
 }
 
 ChatClient::~ChatClient() {
@@ -158,4 +32,28 @@ void ChatClient::Disconnect() {
 ChatClient& ChatClient::getInstance() {
     static ChatClient client;
     return client;
+}
+
+void ChatClient::consumePacket(ChatPacket packet) {
+    auto event = CoreUtility::eventFromPacket(packet);
+    if (event.type == ChatEvent::EMPTY || event.type == ChatEvent::PARTICIPANT_SHARE_FILE) {
+        if (ClientFileManager::getInstance().isDone(packet)) {
+            eventReceived(CoreUtility::eventFromPacket(ClientFileManager::getInstance().getDone(packet)));
+        }
+    }
+    if (event.type == ChatEvent::EventType::PARTICIPANT_SHARE_FILE) {
+        event.type = ChatEvent::EventType::PARTICIPANT_FILE;
+        event.message.message = QString::fromStdString(ClientFileManager::getInstance().getDownloadFilename(event));
+    }
+    eventReceived(event);
+}
+
+void ChatClient::SendEvent(ChatEvent event) {
+    if (event.type == ChatEvent::PARTICIPANT_SHARE_FILE) {
+        auto file = CoreUtility::filePacketFromEvent(event);
+        for (auto &&packet : file.packets)
+            impl->write(packet);
+        return;
+    }
+    impl->write(CoreUtility::packetFromEvent(event));
 }
