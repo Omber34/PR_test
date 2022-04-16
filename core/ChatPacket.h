@@ -18,8 +18,8 @@ public:
     enum { max_body_length = 1024 };
 
     ChatPacket();
-    ChatPacket(const ChatPacket& other);
-    ChatPacket& operator=(const ChatPacket& other);
+    ChatPacket(const ChatPacket& other) = default;
+    ChatPacket& operator=(const ChatPacket& other) = default;
     ChatPacket(ChatPacket&& other) = default;
     ChatPacket& operator=(ChatPacket&& other) = default;
 
@@ -49,7 +49,7 @@ public:
 
 private:
     //State
-    std::unique_ptr<uint8_t[]> data_;
+    std::vector<uint8_t> data_;
     uint32_t body_length_;
     uint32_t sequence_index_;
     uint32_t event_id_;

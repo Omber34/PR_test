@@ -3,48 +3,41 @@
 //
 
 #include "gtest/gtest.h"
+#include <sstream>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QDebug>
 #include "CoreUtility.h"
+#include "FileManager.h"
 
 namespace {
-    const char * getTestMessagePacketData() {
-        const auto packetBodyData = R"({"message":"vstavaite, kaidany porvite i vrazhou zlou kroviu zemly okropite","type":0,"user":"Taras"})";
+
+    std::unique_ptr<char*> createNewPacket(const char* packetBodyData){
+        std::unique_ptr<char*> packetData;
         auto size = strlen(packetBodyData) + ChatPacket::header_length + 1;
-        char *packetData = new char[size];
-        int32_t * cvtPacketData = reinterpret_cast<int32_t*>(packetData);
+        packetData = std::make_unique<char *>(new char[size]);
+        int32_t *cvtPacketData = reinterpret_cast<int32_t *>(*packetData);
         cvtPacketData[0] = 0;
         cvtPacketData[1] = 0;
         cvtPacketData[2] = strlen(packetBodyData);
-        memcpy(packetData + ChatPacket::header_length, packetBodyData, strlen(packetBodyData));
-        packetData[size - 1] = '\0';
-        return packetData;
+        memcpy(*packetData + ChatPacket::header_length, packetBodyData, strlen(packetBodyData));
+        (*packetData)[size - 1] = '\0';
+        return std::move(packetData);
+    }
+
+    const char * getTestMessagePacketData() {
+        static std::unique_ptr<char*> packetData = createNewPacket(R"({"message":"vstavaite, kaidany porvite i vrazhou zlou kroviu zemly okropite","type":0,"user":"Taras"})");
+        return *packetData;
     }
 
     const char * getTestJoinPacketData() {
-        const auto packetBodyData = R"({"type":2,"user":"Taras"})";
-        auto size = strlen(packetBodyData) + ChatPacket::header_length + 1;
-        char *packetData = new char[size];
-        int32_t * cvtPacketData = reinterpret_cast<int32_t*>(packetData);
-        cvtPacketData[0] = 0;
-        cvtPacketData[1] = 0;
-        cvtPacketData[2] = strlen(packetBodyData);
-        memcpy(packetData + ChatPacket::header_length, packetBodyData, strlen(packetBodyData));
-        packetData[size - 1] = '\0';
-        return packetData;
+        static std::unique_ptr<char*> packetData = createNewPacket(R"({"type":2,"user":"Taras"})");
+        return *packetData;
     }
+
     const char * getTestLeavePacketData() {
-        const auto packetBodyData = R"({"type":3,"user":"Taras"})";
-        auto size = strlen(packetBodyData) + ChatPacket::header_length + 1;
-        char *packetData = new char[size];
-        int32_t * cvtPacketData = reinterpret_cast<int32_t*>(packetData);
-        cvtPacketData[0] = 0;
-        cvtPacketData[1] = 0;
-        cvtPacketData[2] = strlen(packetBodyData);
-        memcpy(packetData + ChatPacket::header_length, packetBodyData, strlen(packetBodyData));
-        packetData[size - 1] = '\0';
-        return packetData;
+        static std::unique_ptr<char*> packetData = createNewPacket(R"({"type":3,"user":"Taras"})");
+        return *packetData;
     }
 
     TEST(ChatPacket, TrivialMethod) {
@@ -129,6 +122,48 @@ namespace {
         EXPECT_STREQ(event.user.toStdString().data(), json["user"].toString().toStdString().data());
         EXPECT_EQ(event.type, ChatEvent::PARTICIPANT_MESSAGE);
         EXPECT_EQ(event.packetCount, 0) << "it is not a file event";
+    }
+
+    TEST(ChatFilePacket, Trivial) {
+        char testFileData[] =   "a b c d e f g h i j k l m n o p q r s t u v w x y z"
+                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
+                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
+                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
+                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
+                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
+                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
+                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
+                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
+                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
+                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
+                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
+                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
+                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
+                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
+                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
+                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
+                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
+                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
+                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
+                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
+                            "a b c d e f g h i j k l m n o p q r s t u v w x y z\0";
+
+        const size_t testFileDataSize = strlen(testFileData);
+        auto packet2p = testFileData + ChatPacket::max_body_length;
+        std::stringstream testFile;
+        testFile.write(testFileData, testFileDataSize);
+
+        auto filePacket1 = FileManager::loadFileToFilePacket(testFile);
+        EXPECT_EQ(filePacket1.packets.size(), 2);
+        EXPECT_TRUE(strncmp(reinterpret_cast<const char *>(filePacket1.packets.begin()->body()), testFileData, ChatPacket::max_body_length) == 0);
+        EXPECT_STREQ(reinterpret_cast<const char *>((++filePacket1.packets.begin())->body()), packet2p);
+        EXPECT_EQ(testFileDataSize - filePacket1.packets.begin()->body_length(), (++filePacket1.packets.begin())->body_length());
+
+
+        std::stringstream savedFile;
+        FileManager::saveFilePacketToDisk(savedFile, filePacket1);
+
+        EXPECT_STREQ(savedFile.str().c_str(), testFileData);
     }
 
     TEST(FileManager, Trivial) {

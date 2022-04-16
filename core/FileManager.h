@@ -12,7 +12,9 @@ public:
     static std::string generateNewFileName(const ChatFilePacket& filePacket);
     static std::string generateNewFileName(const ChatEvent& chatEvent);
     static void saveFilePacketToDisk(const std::filesystem::path& destPath, const ChatFilePacket& packet);
+    static void saveFilePacketToDisk(std::ostream & destFile, const ChatFilePacket& packet);
     static ChatFilePacket loadFileToFilePacket(const std::filesystem::path& sourcePath);
+    static ChatFilePacket loadFileToFilePacket(std::istream& file);
 
 
     virtual ~FileManager() = 0 {};
