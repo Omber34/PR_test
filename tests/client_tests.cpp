@@ -1,8 +1,10 @@
 //
 // Created by Herman on 4/16/2022.
 //
+#include <FileManager.h>
 #include "gtest/gtest.h"
 #include "ChatModelTest.h"
+#include "FileManagerTest.h"
 #include "../client/ChatClient.h"
 
 TEST(ClientTest, Trivial) {
@@ -70,4 +72,15 @@ TEST_F(ChatModelTest, AddEvent) {
     EXPECT_EQ(model.rowCount(), 4);
 }
 
+TEST_F(FileManagerTest, Trivial) {
+    ClientFileManager manager;
+    std::stringstream testFile;
+    testFile.write(testTxtFileData, testTxtFileDataSize);
 
+    auto filePacket = FileManager::loadFileToFilePacket(testFile);
+    std::optional<ChatPacket> result;
+    for (auto packet : filePacket.packets)
+        result = manager.process(std::move(packet));
+
+    result
+}
