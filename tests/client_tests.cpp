@@ -69,3 +69,5 @@ TEST_F(ChatModelTest, AddEvent) {
     EXPECT_EQ(helper.counters["eventAdded"], 4);
     EXPECT_EQ(model.rowCount(), 4);
 }
+
+

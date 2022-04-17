@@ -3,45 +3,16 @@
 //
 
 #include "gtest/gtest.h"
+#include "CoreTest.h"
 #include <sstream>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QDebug>
 #include "CoreUtility.h"
 #include "FileManager.h"
 
 namespace {
-
-    std::unique_ptr<char*> createNewPacket(const char* packetBodyData){
-        std::unique_ptr<char*> packetData;
-        auto size = strlen(packetBodyData) + ChatPacket::header_length + 1;
-        packetData = std::make_unique<char *>(new char[size]);
-        int32_t *cvtPacketData = reinterpret_cast<int32_t *>(*packetData);
-        cvtPacketData[0] = 0;
-        cvtPacketData[1] = 0;
-        cvtPacketData[2] = strlen(packetBodyData);
-        memcpy(*packetData + ChatPacket::header_length, packetBodyData, strlen(packetBodyData));
-        (*packetData)[size - 1] = '\0';
-        return std::move(packetData);
-    }
-
-    const char * getTestMessagePacketData() {
-        static std::unique_ptr<char*> packetData = createNewPacket(R"({"message":"vstavaite, kaidany porvite i vrazhou zlou kroviu zemly okropite","type":0,"user":"Taras"})");
-        return *packetData;
-    }
-
-    const char * getTestJoinPacketData() {
-        static std::unique_ptr<char*> packetData = createNewPacket(R"({"type":2,"user":"Taras"})");
-        return *packetData;
-    }
-
-    const char * getTestLeavePacketData() {
-        static std::unique_ptr<char*> packetData = createNewPacket(R"({"type":3,"user":"Taras"})");
-        return *packetData;
-    }
-
-    TEST(ChatPacket, TrivialMethod) {
-        auto packetData = getTestMessagePacketData() + ChatPacket::header_length;
+    TEST_F(CoreTest, TrivialMethod) {
+        auto packetData = testMessagePacketData.data() + ChatPacket::header_length;
         auto packetDataLen = strlen(packetData);
         ChatPacket packet;
         packet.event_id(1);
@@ -57,8 +28,8 @@ namespace {
         EXPECT_TRUE(strncmp(reinterpret_cast<const char*>(packet.body()), packetData, packet.body_length()) == 0);
     }
 
-    TEST(ChatPacket, MessageFromEvent) {
-        auto packetData = getTestMessagePacketData() + ChatPacket::header_length;
+    TEST_F(CoreTest, MessageFromEvent) {
+        auto packetData = testMessagePacketData.data() + ChatPacket::header_length;
         auto packetDataLen = strlen(packetData);
         auto json = QJsonDocument::fromJson(packetData).object();
         ChatEvent event;
@@ -73,8 +44,8 @@ namespace {
         EXPECT_TRUE(strncmp(reinterpret_cast<const char*>(packet.body()), packetData, packet.body_length()) == 0);
     }
 
-    TEST(ChatPacket, JoinFromEvent) {
-        auto packetData = getTestJoinPacketData() + ChatPacket::header_length;
+    TEST_F(CoreTest, JoinFromEvent) {
+        auto packetData = testJoinPacketData.data() + ChatPacket::header_length;
         auto packetDataLen = strlen(packetData);
         auto json = QJsonDocument::fromJson(packetData).object();
         ChatEvent event;
@@ -88,8 +59,8 @@ namespace {
         EXPECT_TRUE(strncmp(reinterpret_cast<const char*>(packet.body()), packetData, strlen(packetData)) == 0);
     }
 
-    TEST(ChatPacket, LeaveFromEvent) {
-        auto packetData = getTestLeavePacketData() + ChatPacket::header_length;
+    TEST_F(CoreTest, LeaveFromEvent) {
+        auto packetData = testLeavePacketData.data() + ChatPacket::header_length;
         auto packetDataLen = strlen(packetData);
         auto json = QJsonDocument::fromJson(packetData).object();
         ChatEvent event;
@@ -103,8 +74,8 @@ namespace {
         EXPECT_TRUE(strncmp(reinterpret_cast<const char*>(packet.body()), packetData, strlen(packetData)) == 0);
     }
 
-    TEST(ChatEvent, FromPacket) {
-        auto packetData = getTestMessagePacketData() + ChatPacket::header_length;
+    TEST_F(CoreTest, FromPacket) {
+        auto packetData = testMessagePacketData.data() + ChatPacket::header_length;
         auto packetDataLen = strlen(packetData);
         ChatPacket packet;
         packet.event_id(1);
@@ -124,7 +95,7 @@ namespace {
         EXPECT_EQ(event.packetCount, 0) << "it is not a file event";
     }
 
-    TEST(ChatFilePacket, Trivial) {
+    TEST_F(CoreTest, Trivial) {
         char testFileData[] =   "a b c d e f g h i j k l m n o p q r s t u v w x y z"
                             "a b c d e f g h i j k l m n o p q r s t u v w x y z"
                             "a b c d e f g h i j k l m n o p q r s t u v w x y z"
