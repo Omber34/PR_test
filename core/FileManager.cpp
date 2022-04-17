@@ -16,7 +16,13 @@ void FileManager::saveFilePacketToDisk(const std::filesystem::path &destPath, co
 
 ChatFilePacket FileManager::loadFileToFilePacket(const std::filesystem::path &sourcePath) {
     std::ifstream fileStream(sourcePath, std::ios::in | std::ios::binary);
-    return loadFileToFilePacket(fileStream);
+    auto result = loadFileToFilePacket(fileStream);
+    ChatEvent chatEvent;
+    chatEvent.type = ChatEvent::EventType::PARTICIPANT_SHARE_FILE;
+    auto filename = sourcePath.string();
+    chatEvent.message = {QString::fromStdString(filename), true};
+    result.packets.emplace_front(CoreUtility::packetFromEvent(chatEvent));
+    return result;
 }
 
 std::string FileManager::generateNewFileName(const ChatEvent &chatEvent) {
@@ -49,6 +55,7 @@ ChatFilePacket FileManager::loadFileToFilePacket(std::istream &fileStream) {
         }
     }
     nextEventId++;
+    result.expectedCount = sequenceIndex;
     return result;
 }
 

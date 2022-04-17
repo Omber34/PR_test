@@ -4,7 +4,9 @@
 
 #include "gtest/gtest.h"
 #include "CoreTest.h"
+#include "FileManagerTest.h"
 #include <sstream>
+#include <string>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include "CoreUtility.h"
@@ -95,46 +97,34 @@ namespace {
         EXPECT_EQ(event.packetCount, 0) << "it is not a file event";
     }
 
-    TEST_F(CoreTest, Trivial) {
-        char testFileData[] =   "a b c d e f g h i j k l m n o p q r s t u v w x y z"
-                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
-                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
-                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
-                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
-                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
-                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
-                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
-                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
-                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
-                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
-                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
-                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
-                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
-                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
-                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
-                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
-                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
-                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
-                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
-                            "a b c d e f g h i j k l m n o p q r s t u v w x y z"
-                            "a b c d e f g h i j k l m n o p q r s t u v w x y z\0";
-
-        const size_t testFileDataSize = strlen(testFileData);
-        auto packet2p = testFileData + ChatPacket::max_body_length;
+    TEST_F(FileManagerTest, Trivial) {
+        auto packet2p = testTxtFileData + ChatPacket::max_body_length;
         std::stringstream testFile;
-        testFile.write(testFileData, testFileDataSize);
+        testFile.write(testTxtFileData, testTxtFileDataSize);
 
         auto filePacket1 = FileManager::loadFileToFilePacket(testFile);
         EXPECT_EQ(filePacket1.packets.size(), 2);
-        EXPECT_TRUE(strncmp(reinterpret_cast<const char *>(filePacket1.packets.begin()->body()), testFileData, ChatPacket::max_body_length) == 0);
+        EXPECT_TRUE(strncmp(reinterpret_cast<const char *>(filePacket1.packets.begin()->body()), testTxtFileData, ChatPacket::max_body_length) == 0);
         EXPECT_STREQ(reinterpret_cast<const char *>((++filePacket1.packets.begin())->body()), packet2p);
-        EXPECT_EQ(testFileDataSize - filePacket1.packets.begin()->body_length(), (++filePacket1.packets.begin())->body_length());
-
+        EXPECT_EQ(testTxtFileDataSize - filePacket1.packets.begin()->body_length(), (++filePacket1.packets.begin())->body_length());
 
         std::stringstream savedFile;
         FileManager::saveFilePacketToDisk(savedFile, filePacket1);
 
-        EXPECT_STREQ(savedFile.str().c_str(), testFileData);
+        EXPECT_STREQ(savedFile.str().c_str(), testTxtFileData);
+    }
+
+    TEST(DISABLED_FileManagerTest, ExeFile) {
+        const char* fileName = "test_exe.exe";
+        const char* savedFileName2 = "test_exe2.exe";
+        std::ifstream testFile(fileName, std::ios::in | std::ios::binary);
+        EXPECT_TRUE(testFile.is_open());
+
+        auto filePacket = FileManager::loadFileToFilePacket(testFile);
+        FileManager::saveFilePacketToDisk(savedFileName2, filePacket);
+
+        auto res = system(savedFileName2);
+        EXPECT_EQ(res, 0);
     }
 
     TEST(FileManager, Trivial) {
