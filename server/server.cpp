@@ -18,7 +18,7 @@ int main(int argc, char ** argv) {
             ports.emplace_back(argv[i]);
         }
     }
-    ChatServer chatServer;
+    server::ChatServer chatServer;
 
 
     return 0;

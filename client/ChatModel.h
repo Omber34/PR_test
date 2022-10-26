@@ -6,22 +6,24 @@
 #define PR_TEST_CHATMODEL_H
 
 #include <QAbstractListModel>
-#include <QtCore/QDateTime>
+#include <QMetaType>
 #include <utility>
 #include "ChatEvent.h"
 #include "IChatClient.h"
 
-class ChatModel : public QAbstractListModel
+namespace client
 {
-    Q_OBJECT
-public:
+  class ChatModel : public QAbstractListModel
+  {
+  Q_OBJECT
+  public:
     enum
     {
-        eEventRole = Qt::UserRole + 1,
+      eEventRole = Qt::UserRole + 1,
     };
     Q_PROPERTY(QString user READ getUser WRITE setUser)
 
-    explicit ChatModel(IChatClient &client, QObject *parent = nullptr);
+    explicit ChatModel(IChatClientPtr client, QObject *parent = nullptr);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
@@ -34,23 +36,27 @@ public:
     void setUser(const QString &_user);
 
     Q_INVOKABLE void sendMessage(const QString &msg);
-    Q_INVOKABLE void sendFile(const QString& msg);
-    Q_INVOKABLE void openFile(const QString& msg);
+    Q_INVOKABLE void sendFile(const QString &msg);
+    Q_INVOKABLE void openFile(const QString &msg);
 
-public slots:
-    void addEvent(ChatEvent ev);
+  public slots:
+    void addEvent(core::ChatEvent ev);
 
-signals:
+  signals:
     void eventAdded();
 
-public:
+  public:
     virtual ~ChatModel();
     void Greetings();
 
-private:
-    IChatClient& client;
-    QList<ChatEvent> m_events;
+  private:
+    IChatClientPtr client;
+    QList<core::ChatEvent> m_events;
     QString user;
-};
+  };
+
+  using ChatModelPtr = std::shared_ptr<ChatModel>;
+}
+
 
 #endif //PR_TEST_CHATMODEL_H

@@ -18,7 +18,7 @@ public:
 
 protected:
     void SetUp() override {
-        QObject::connect(&model, &ChatModel::eventAdded, [this] (){
+        QObject::connect(&model, &client::ChatModel::eventAdded, [this] (){
                helper.testSlot("eventAdded");
         });
 
@@ -32,7 +32,7 @@ protected:
 
     const char* username = "Taras";
     TestClient client;
-    ChatModel model;
+    client::ChatModel model;
     QObjectTestHelper helper;
 };
 

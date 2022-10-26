@@ -9,29 +9,51 @@
 
 #include "ChatEvent.h"
 
-class ChatPacket {
-public:
-    enum { event_id_length = 4 };
-    enum { sequence_length = 4 };
-    enum { payload_size_length = 4 };
-    enum { header_length = event_id_length + sequence_length + payload_size_length };
-    enum { max_body_length = 1024 };
+namespace core
+{
+  class ChatPacket
+  {
+  public:
+    enum
+    {
+      event_id_length = 4
+    };
+    enum
+    {
+      sequence_length = 4
+    };
+    enum
+    {
+      payload_size_length = 4
+    };
+    enum
+    {
+      header_length = event_id_length + sequence_length + payload_size_length
+    };
+    enum
+    {
+      max_body_length = 1024
+    };
 
     ChatPacket();
-    ChatPacket(const ChatPacket& other) = default;
-    ChatPacket& operator=(const ChatPacket& other) = default;
-    ChatPacket(ChatPacket&& other) = default;
-    ChatPacket& operator=(ChatPacket&& other) = default;
 
-    const uint8_t * data() const;
+    ChatPacket(const ChatPacket &other) = default;
 
-    uint8_t * data();
+    ChatPacket &operator=(const ChatPacket &other) = default;
+
+    ChatPacket(ChatPacket &&other) = default;
+
+    ChatPacket &operator=(ChatPacket &&other) = default;
+
+    const uint8_t *data() const;
+
+    uint8_t *data();
 
     std::size_t length() const;
 
-    const uint8_t * body() const;
+    const uint8_t *body() const;
 
-    uint8_t * body();
+    uint8_t *body();
 
     uint32_t body_length() const;
 
@@ -42,20 +64,23 @@ public:
     void encode_header();
 
     void sequence_index(uint32_t new_sequence);
+
     uint32_t sequence_index() const;
 
     void event_id(uint32_t new_id);
+
     uint32_t event_id() const;
 
-private:
+  private:
     //State
     std::vector<uint8_t> data_;
     uint32_t body_length_;
     uint32_t sequence_index_;
     uint32_t event_id_;
-};
+  };
 
 
-typedef std::deque<ChatPacket> ChatPacketQueue;
+  typedef std::deque<ChatPacket> ChatPacketQueue;
+}
 
 #endif //PR_TEST_CHATPACKET_H

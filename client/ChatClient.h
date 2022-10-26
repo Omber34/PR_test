@@ -16,34 +16,41 @@
 #include "IChatClient.h"
 #include "ClientFileManager.h"
 
-class ChatClient : public IChatClient {
-    Q_OBJECT
-public slots:
-    void SendEvent(ChatEvent event) Q_DECL_OVERRIDE;
-    
-public:
+namespace client
+{
+  class ChatClient : public IChatClient
+  {
+  Q_OBJECT
+  public slots:
+    void SendEvent(core::ChatEvent event) Q_DECL_OVERRIDE;
+
+  public:
+    explicit ChatClient();
+
     void Disconnect();
 
-    static ChatClient& getInstance();
     ChatClient(const ChatClient &other) = delete;
     ChatClient(ChatClient &&other) = delete;
-    ChatClient& operator=(const ChatClient &other) = delete;
-    ChatClient& operator=(ChatClient &&other) = delete;
+    ChatClient &operator=(const ChatClient &other) = delete;
+    ChatClient &operator=(ChatClient &&other) = delete;
 
     ~ChatClient();
 
-private:
-    explicit ChatClient();
+  private:
 
-    void consumePacket(ChatPacket packet);
+    void consumePacket(core::ChatPacket packet);
 
     ClientFileManager fileManager;
 
     boost::asio::io_context io_context;
     std::thread ioContextThread;
+
     class ChatClientImpl;
+
     std::unique_ptr<ChatClientImpl> impl;
-};
+    void sendJoin(const core::ChatEvent &event);
+  };
+}
 
 
 #endif //PR_TEST_CHATCLIENT_H

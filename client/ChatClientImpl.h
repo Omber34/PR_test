@@ -8,10 +8,10 @@
 
 using boost::asio::ip::tcp;
 
-class ChatClient::ChatClientImpl
+class client::ChatClient::ChatClientImpl
 {
 public:
-    ChatClientImpl(boost::asio::io_context& io_context, const tcp::resolver::results_type& endpoints, std::function<void (ChatPacket&&)> packetConsumer)
+    ChatClientImpl(boost::asio::io_context& io_context, const tcp::resolver::results_type& endpoints, std::function<void (core::ChatPacket&&)> packetConsumer)
             : io_context_(io_context),
               socket_(io_context),
               packetConsumer(std::move(packetConsumer))
@@ -19,7 +19,7 @@ public:
         do_connect(endpoints);
     }
 
-    void write(ChatPacket msg)
+    void write(core::ChatPacket msg)
     {
         boost::asio::post(io_context_,
                           [this, msg=std::move(msg)]() mutable
@@ -54,7 +54,7 @@ private:
     void do_read_header()
     {
         boost::asio::async_read(socket_,
-                                boost::asio::buffer(read_msg_.data(), ChatPacket::header_length),
+                                boost::asio::buffer(read_msg_.data(), core::ChatPacket::header_length),
                                 [this](boost::system::error_code ec, std::size_t /*length*/)
                                 {
                                     if (!ec && read_msg_.decode_header())
@@ -111,7 +111,7 @@ private:
 private:
     boost::asio::io_context& io_context_;
     tcp::socket socket_;
-    ChatPacket read_msg_;
-    ChatPacketQueue write_msgs_;
-    std::function<void (ChatPacket&&)> packetConsumer;
+    core::ChatPacket read_msg_;
+    core::ChatPacketQueue write_msgs_;
+    std::function<void (core::ChatPacket&&)> packetConsumer;
 };

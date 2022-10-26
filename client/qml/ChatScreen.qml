@@ -5,12 +5,22 @@ import QtQuick.Layouts 1.2
 import QtQuick.Dialogs 1.2
 import QtGraphicalEffects 1.0
 import models 1.0
+import client 1.0
 import enums 1.0
 
 Item
 {
     property string username: "Boris Britva"
     id: screen
+
+    ChatClientApp
+    {
+        Component.onCompleted:
+        {
+            model.user = screen.username
+        }
+        id: chatApp
+    }
 
     Item
     {
@@ -39,12 +49,6 @@ Item
         }
     }
 
-    ChatModel
-    {
-        id: chatModel
-        user: screen.username
-    }
-
     ListView
     {
         id: messageListView
@@ -57,7 +61,7 @@ Item
         width: 500
         spacing: 15
 
-        model: chatModel
+        model: chatApp.model
 
         Connections
         {
@@ -247,7 +251,7 @@ Item
                     anchors.fill: parent
                     onClicked: {
                         if (model.event.type == ChatEvent.PARTICIPANT_FILE)
-                            chatModel.openFile(model.event.message.message)
+                            chatApp.model.openFile(model.event.message.message)
                     }
                 }
             }
@@ -325,7 +329,7 @@ Item
         selectMultiple: false
 
         onAccepted: {
-            chatModel.sendFile(fileDialog.fileUrl)
+            chatApp.model.sendFile(fileDialog.fileUrl)
         }
     }
 
@@ -333,7 +337,7 @@ Item
     {
         if (text.trim() === "")
             return;
-        chatModel.sendMessage(text)
+        chatApp.model.sendMessage(text)
     }
 }
 

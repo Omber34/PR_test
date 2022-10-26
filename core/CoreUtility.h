@@ -2,28 +2,35 @@
 // Created by Herman on 1/18/2022.
 //
 
-#ifndef PR_TEST_COREUTILITY_H
-#define PR_TEST_COREUTILITY_H
-
+#pragma once
 
 #include "ChatPacket.h"
+
+#include "ChatEvent.h"
+#include "ChatFilePacket.h"
+#include "AppEvent.h"
 
 #include <algorithm>
 #include <iterator>
 
-#include "ChatEvent.h"
-#include "ChatFilePacket.h"
+namespace core
+{
+  constexpr const auto DefaultHost = "127.0.0.1";
+  constexpr const auto DefaultPort = "4026";
 
-constexpr const auto defaultHost = "127.0.0.1";
-constexpr const auto defaultPort = "4026";
-
-class CoreUtility {
-public:
+  class CoreUtility
+  {
+  public:
     static ChatPacket packetFromEvent(const ChatEvent &event);
+
     static ChatFilePacket filePacketFromEvent(ChatEvent event);
+
     static ChatEvent eventFromPacket(const ChatPacket &packet);
-    static ChatEvent eventFromFilePacket(const ChatFilePacket& packet);
-};
 
+    static ChatEvent eventFromFilePacket(const ChatFilePacket &packet);
 
-#endif //PR_TEST_COREUTILITY_H
+    static AppEventPtr appEventFromPacket(const ChatPacket &packet);
+
+    static ChatPacket packetFromAppEvent(const AppEventPtr &packet);
+  };
+}

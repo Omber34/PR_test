@@ -6,19 +6,27 @@
 #define PR_TEST_ICHATCLIENT_H
 
 #include <QObject>
+#
 #include "ChatEvent.h"
 
-class IChatClient : public QObject {
+#include <memory>
+
+namespace client
+{
+  class IChatClient : public QObject
+  {
     Q_OBJECT
-public:
-public slots:
-    virtual void SendEvent(ChatEvent event) = 0;
+  public slots:
+    virtual void SendEvent(core::ChatEvent event) = 0;
 
-signals:
-    void eventReceived(ChatEvent);
+  signals:
+    void eventReceived(core::ChatEvent);
 
-public:
-    virtual ~IChatClient() {}
-};
+  public:
+    virtual ~IChatClient() { }
+  };
+
+  using IChatClientPtr = std::shared_ptr<IChatClient>;
+}
 
 #endif //PR_TEST_ICHATCLIENT_H

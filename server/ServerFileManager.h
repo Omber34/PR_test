@@ -9,24 +9,28 @@
 #include <string>
 #include <ChatFilePacket.h>
 
-class ServerFileManager {
+namespace server
+{
+  class ServerFileManager
+  {
 
-public:
-    static ServerFileManager& getInstance();
+  public:
+    static ServerFileManager &getInstance();
     bool isDone(ChatPacket &packet);
     ChatPacket getDone(ChatPacket &packet);
 
-private:
+  private:
     ServerFileManager() = default;
     ServerFileManager(const ServerFileManager &other) = delete;
     ServerFileManager(ServerFileManager &&other) = delete;
-    ServerFileManager& operator=(const ServerFileManager &other) = delete;
-    ServerFileManager& operator=(ServerFileManager &&other) = delete;
-    
+    ServerFileManager &operator=(const ServerFileManager &other) = delete;
+    ServerFileManager &operator=(ServerFileManager &&other) = delete;
+
     void startNewFile(ChatPacket &packet);
     bool continueFile(ChatPacket &packet);
     std::unordered_map<std::string, ChatFilePacket> unfinishedFiles;
-};
+  };
+}
 
 
 #endif //PR_TEST_SERVERFILEMANAGER_H

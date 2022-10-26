@@ -7,15 +7,15 @@
 
 #include "../client/IChatClient.h"
 
-class TestClient : public IChatClient {
+class TestClient : public client::IChatClient {
     Q_OBJECT
 public:
-    void SendEvent(ChatEvent event) override {
+    void SendEvent(core::ChatEvent event) override {
         eventReceived(event);
         events.emplace_back(std::move(event));
     }
 
-    std::vector<ChatEvent> events;
+    std::vector<core::ChatEvent> events;
 };
 
 

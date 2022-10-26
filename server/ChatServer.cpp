@@ -15,183 +15,300 @@
 
 #include <boost/asio.hpp>
 
-class chat_participant
+using namespace core;
+
+const QString publicRoomName = "Public room";
+
+class ChatParticipant
 {
 public:
-    virtual ~chat_participant() {}
-    virtual void deliver(const ChatPacket& msg) = 0;
+  virtual ~ChatParticipant() { }
+
+  virtual QString getName() const = 0;
+  virtual void setName(const QString &newName) = 0;
+
+  virtual void deliver(const ChatPacket &msg) = 0;
 };
 
-typedef std::shared_ptr<chat_participant> chat_participant_ptr;
+typedef std::shared_ptr<ChatParticipant> ChatParticipantPtr;
 
 //----------------------------------------------------------------------
 
 using boost::asio::ip::tcp;
-class chat_room
+
+class IChatRoom
 {
 public:
-    void join(chat_participant_ptr participant)
-    {
-        participants_.insert(participant);
-        for (auto msg: recent_msgs_)
-            participant->deliver(msg);
-    }
+  virtual void join(ChatParticipantPtr participant) = 0;
+  virtual void leave(ChatParticipantPtr participant) = 0;
+  virtual void deliver(ChatParticipantPtr participant, const ChatPacket &msg) = 0;
+};
 
-    void leave(chat_participant_ptr participant)
-    {
-        participants_.erase(participant);
-    }
+class Room : public IChatRoom
+{
+public:
+  void join(ChatParticipantPtr participant) override
+  {
+    participants_.insert(participant);
+    for (auto msg: recent_msgs_)
+      participant->deliver(msg);
+  }
 
-    void deliver(const ChatPacket& msg)
-    {
-        recent_msgs_.push_back(msg);
-        while (recent_msgs_.size() > max_recent_msgs)
-            recent_msgs_.pop_front();
+  void leave(ChatParticipantPtr participant) override
+  {
+    participants_.erase(participant);
+  }
 
-        for (auto participant: participants_)
-            participant->deliver(msg);
-    }
+  void deliver(ChatParticipantPtr participant, const ChatPacket &msg) override
+  {
+    recent_msgs_.push_back(msg);
+    while (recent_msgs_.size() > max_recent_msgs)
+      recent_msgs_.pop_front();
+
+    for (auto participant: participants_)
+      participant->deliver(msg);
+  }
 
 private:
-    std::set<chat_participant_ptr> participants_;
-    enum { max_recent_msgs = 100 };
-    ChatPacketQueue recent_msgs_;
+  std::set<ChatParticipantPtr> participants_;
+  enum
+  {
+    max_recent_msgs = 100
+  };
+  ChatPacketQueue recent_msgs_;
 };
 
 //----------------------------------------------------------------------
 
-class chat_session
-        : public chat_participant
-        , public std::enable_shared_from_this<chat_session>
+class WaitingChatRoom : public IChatRoom
 {
 public:
-    chat_session(tcp::socket socket, chat_room& room)
-            : socket_(std::move(socket)),
-              room_(room)
+  WaitingChatRoom(std::shared_ptr<ChatAppModel> appModel, std::vector<::Room> &rooms)
+          : rooms(rooms)
+            , appModel(appModel) { }
+
+  void join(ChatParticipantPtr participant) override
+  {
+    unauthorizedParticipants.insert(participant);
+  }
+
+  void leave(ChatParticipantPtr participant) override
+  {
+    if (participants.find(participant) != participants.end())
+      participants.erase(participant);
+
+    if (unauthorizedParticipants.find(participant) != unauthorizedParticipants.end())
+      unauthorizedParticipants.erase(participant);
+  }
+
+  void deliver(ChatParticipantPtr participant, const ChatPacket &msg) override
+  {
+    if (unauthorizedParticipants.find(participant) != unauthorizedParticipants.end())
     {
+      deliverUnauthorized(participant, msg);
     }
 
-    void start()
+    if (participants.find(participant) != participants.end())
     {
-        room_.join(shared_from_this());
-        do_read_header();
+      deliverAuthorized(participant, msg);
     }
-
-    void deliver(const ChatPacket& msg)
-    {
-        bool write_in_progress = !write_msgs_.empty();
-        write_msgs_.push_back(msg);
-        if (!write_in_progress)
-        {
-            do_write();
-        }
-    }
+  }
 
 private:
-    void do_read_header()
+  bool authorizeParticipant(ChatParticipantPtr participant, const ChatPacket &event)
+  {
+    const auto appEvent = CoreUtility::appEventFromPacket(event);
+
+    if (appEvent->getType() != AppEventType::USER_JOIN)
+      return false;
+
+    participant->setName(appEvent->getUserName());
+    return true;
+  }
+
+  void deliverUnauthorized(ChatParticipantPtr participant, const ChatPacket &msg)
+  {
+    if (authorizeParticipant(participant, msg))
     {
-        auto self(shared_from_this());
-        boost::asio::async_read(socket_,
-            boost::asio::buffer(read_msg_.data(), ChatPacket::header_length),
-            [this, self](boost::system::error_code ec, std::size_t /*length*/)
-            {
-                if (!ec && read_msg_.decode_header())
-                {
-                    do_read_body();
-                }
-                else
-                {
-                    room_.leave(shared_from_this());
-                }
-            });
+      std::lock_guard lockGuard {participant_mutex};
+      auto node = unauthorizedParticipants.extract(participant);
+      participants.insert(std::move(node));
     }
+  }
 
-    void do_read_body()
+  void deliverAuthorized(ChatParticipantPtr participant, const ChatPacket &msg)
+  {
+    for (auto aparticipant : participants)
     {
-        auto self(shared_from_this());
-        boost::asio::async_read(socket_,
-            boost::asio::buffer(read_msg_.body(), read_msg_.body_length()),
-            [this, self](boost::system::error_code ec, std::size_t /*length*/)
-            {
-                if (!ec)
-                {
-                    auto event = CoreUtility::eventFromPacket(read_msg_);
-                    std::cout << event.user.toStdString() << " : " << event.message.message.toStdString() << "\n";
-
-                    room_.deliver(read_msg_);
-                    do_read_header();
-                }
-                else
-                {
-                    room_.leave(shared_from_this());
-                }
-            });
+      aparticipant->deliver(msg);
     }
+  }
 
-    void do_write()
-    {
-        auto self(shared_from_this());
-        boost::asio::async_write(socket_,
-            boost::asio::buffer(write_msgs_.front().data(),
-                             write_msgs_.front().length()),
-            [this, self](boost::system::error_code ec, std::size_t /*length*/)
-            {
-             if (!ec)
-             {
-                 write_msgs_.pop_front();
-                 if (!write_msgs_.empty())
-                 {
-                     do_write();
-                 }
-             }
-             else
-             {
-                 room_.leave(shared_from_this());
-             }
-            });
-    }
-
-    boost::asio::ip::tcp::socket socket_;
-    chat_room& room_;
-    ChatPacket read_msg_;
-    ChatPacketQueue write_msgs_;
+  std::set<ChatParticipantPtr> participants;
+  std::set<ChatParticipantPtr> unauthorizedParticipants;
+  std::mutex participant_mutex;
+  std::shared_ptr<ChatAppModel> appModel;
+  std::vector<::Room> &rooms;
 };
 
-class chat_server
+//----------------------------------------------------------------------
+
+class ChatSession
+        : public ChatParticipant
+          , public std::enable_shared_from_this<ChatSession>
 {
 public:
-    chat_server(boost::asio::io_context& io_context,
-    const boost::asio::ip::tcp::endpoint& endpoint)
-    : acceptor_(io_context, endpoint)
+  ChatSession(tcp::socket socket, IChatRoom &room)
+          : socket_(std::move(socket))
+            , room_(room)
+  {
+  }
+
+  void start()
+  {
+    room_.join(shared_from_this());
+    do_read_header();
+  }
+
+  QString getName() const override
+  {
+    return username;
+  }
+
+  void setName(const QString &newName) override
+  {
+    username = newName;
+  }
+
+  void deliver(const ChatPacket &msg)
+  {
+    bool write_in_progress = !write_msgs_.empty();
+    write_msgs_.push_back(msg);
+    if (!write_in_progress)
     {
-        do_accept();
+      do_write();
     }
+  }
 
 private:
-    void do_accept()
-    {
-        acceptor_.async_accept(
-                [this](boost::system::error_code ec, tcp::socket socket)
-                {
-                    if (!ec)
-                    {
-                        std::make_shared<chat_session>(std::move(socket), room_)->start();
-                    }
+  void do_read_header()
+  {
+    auto self(shared_from_this());
+    boost::asio::async_read(socket_,
+                            boost::asio::buffer(read_msg_.data(), ChatPacket::header_length),
+                            [this, self](boost::system::error_code ec, std::size_t /*length*/)
+                            {
+                              if (!ec && read_msg_.decode_header())
+                              {
+                                do_read_body();
+                              }
+                              else
+                              {
+                                room_.leave(shared_from_this());
+                              }
+                            });
+  }
 
-                    do_accept();
-                });
-    }
+  void do_read_body()
+  {
+    auto self(shared_from_this());
+    boost::asio::async_read(socket_,
+                            boost::asio::buffer(read_msg_.body(), read_msg_.body_length()),
+                            [this, self](boost::system::error_code ec, std::size_t /*length*/)
+                            {
+                              if (!ec)
+                              {
+                                auto event = CoreUtility::eventFromPacket(read_msg_);
+                                std::cout << event.user.toStdString() << " : " << event.message.message.toStdString()
+                                          << "\n";
 
-    tcp::acceptor acceptor_;
-    chat_room room_;
+                                room_.deliver(shared_from_this(), read_msg_);
+                                do_read_header();
+                              }
+                              else
+                              {
+                                room_.leave(shared_from_this());
+                              }
+                            });
+  }
+
+  void do_write()
+  {
+    auto self(shared_from_this());
+    boost::asio::async_write(socket_,
+                             boost::asio::buffer(write_msgs_.front().data(),
+                                                 write_msgs_.front().length()),
+                             [this, self](boost::system::error_code ec, std::size_t /*length*/)
+                             {
+                               if (!ec)
+                               {
+                                 write_msgs_.pop_front();
+                                 if (!write_msgs_.empty())
+                                 {
+                                   do_write();
+                                 }
+                               }
+                               else
+                               {
+                                 room_.leave(shared_from_this());
+                               }
+                             });
+  }
+
+  boost::asio::ip::tcp::socket socket_;
+  QString username;
+  IChatRoom &room_;
+  ChatPacket read_msg_;
+  ChatPacketQueue write_msgs_;
 };
 
-ChatServer::ChatServer() {
+//----------------------------------------------------------------------
+
+class ChatServerImpl
+{
+public:
+  ChatServerImpl(boost::asio::io_context &io_context,
+                 const boost::asio::ip::tcp::endpoint &endpoint,
+                 ChatAppModelPtr chatAppModel)
+          : acceptor_(io_context, endpoint)
+            , waitingChatRoom(chatAppModel, rooms)
+  {
+    do_accept();
+  }
+
+private:
+  void do_accept()
+  {
+    acceptor_.async_accept(
+            [this](boost::system::error_code ec, tcp::socket socket)
+            {
+              if (!ec)
+              {
+                std::make_shared<ChatSession>(std::move(socket), waitingChatRoom)->start();
+              }
+
+              do_accept();
+            });
+  }
+
+  tcp::acceptor acceptor_;
+  std::vector<::Room> rooms;
+  WaitingChatRoom waitingChatRoom;
+};
+
+namespace server
+{
+  ChatServer::ChatServer()
+  {
     boost::asio::io_context io_context;
 
-    std::list<chat_server> servers;
-    tcp::endpoint endpoint(tcp::v4(), std::stoi(defaultPort));
-    servers.emplace_back(io_context, endpoint);
+    std::list<ChatServerImpl> servers;
+    tcp::endpoint endpoint(tcp::v4(), std::stoi(DefaultPort));
+    servers.emplace_back(io_context, endpoint, model);
 
     io_context.run();
+
+    CreateRoom newRoom{ publicRoomName, "" };
+    model->getRoomModel()->CreateRoom(newRoom);
+  }
 }

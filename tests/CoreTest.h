@@ -12,13 +12,13 @@ class CoreTest : public testing::Test {
 protected:
     std::vector<char> createNewPacket(const char* packetBodyData){
         std::vector<char> packetData;
-        auto size = strlen(packetBodyData) + ChatPacket::header_length + 1;
+        auto size = strlen(packetBodyData) + core::ChatPacket::header_length + 1;
         packetData.resize(size);
         uint32_t *cvtPacketData = reinterpret_cast<uint32_t *>(packetData.data());
         cvtPacketData[0] = 0;
         cvtPacketData[1] = 0;
         cvtPacketData[2] = strlen(packetBodyData);
-        memcpy(packetData.data() + ChatPacket::header_length, packetBodyData, strlen(packetBodyData));
+        memcpy(packetData.data() + core::ChatPacket::header_length, packetBodyData, strlen(packetBodyData));
         packetData[size - 1] = '\0';
         return std::move(packetData);
     }

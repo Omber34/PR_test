@@ -9,10 +9,14 @@
 #include <list>
 #include "ChatPacket.h"
 
-struct ChatFilePacket {
+namespace core
+{
+  struct ChatFilePacket
+  {
     std::list<ChatPacket> packets;
     size_t expectedCount;
-};
+  };
+}
 
 
 #endif //PR_TEST_CHATFILEPACKET_H
