@@ -88,4 +88,24 @@ namespace core
   {
     return event_id_;
   }
+
+  ChatPacket::ChatPacket(ChatPacket &&other)
+  : data_(std::move(other.data_))
+  , event_id_(other.event_id_)
+  , sequence_index_(other.sequence_index_)
+  , body_length_(other.body_length_)
+  {
+    other.data_.resize(ChatPacket::max_body_length + ChatPacket::header_length);
+  }
+
+  ChatPacket &ChatPacket::operator=(ChatPacket &&other)
+  {
+    data_ = std::move(other.data_);
+    event_id_= other.event_id_;
+    sequence_index_= other.sequence_index_;
+    body_length_= other.body_length_;
+
+    other.data_.resize(ChatPacket::max_body_length + ChatPacket::header_length);
+    return *this;
+  }
 }

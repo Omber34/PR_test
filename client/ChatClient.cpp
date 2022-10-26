@@ -19,8 +19,6 @@ namespace client
                                             });
 
     ioContextThread = std::thread([this]() { io_context.run(); });
-
-    sendJoin(core::ChatEvent());
   }
 
   ChatClient::~ChatClient()
@@ -39,7 +37,7 @@ namespace client
     auto event = core::CoreUtility::eventFromPacket(packet);
     if (event.type == core::ChatEvent::EMPTY || event.type == core::ChatEvent::PARTICIPANT_SHARE_FILE)
     {
-      auto optFileEvent = fileManager.process(packet);
+      auto optFileEvent = fileManager.process(std::move(packet));
       if (optFileEvent)
       {
         eventReceived(core::CoreUtility::eventFromPacket(*optFileEvent));
@@ -57,11 +55,6 @@ namespace client
 
   void ChatClient::SendEvent(core::ChatEvent event)
   {
-    if (event.type == core::ChatEvent::PARTICIPANT_JOIN)
-    {
-      sendJoin(event);
-    }
-
     if (event.type == core::ChatEvent::PARTICIPANT_SHARE_FILE)
     {
       auto file = core::CoreUtility::filePacketFromEvent(event);
@@ -71,11 +64,5 @@ namespace client
     }
 
     impl->write(core::CoreUtility::packetFromEvent(event));
-  }
-
-  void ChatClient::sendJoin(const core::ChatEvent &event)
-  {
-    auto packet = core::CoreUtility::packetFromAppEvent(std::make_shared<core::UserJoinEvent>(event.user));
-    impl->write(packet);
   }
 }

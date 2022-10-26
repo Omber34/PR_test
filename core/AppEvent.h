@@ -17,6 +17,8 @@ namespace core
     USER_LEAVE,
   };
 
+  QString eventTypeToString(AppEventType type);
+
   class AppEvent
   {
   public:

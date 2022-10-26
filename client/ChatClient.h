@@ -48,7 +48,6 @@ namespace client
     class ChatClientImpl;
 
     std::unique_ptr<ChatClientImpl> impl;
-    void sendJoin(const core::ChatEvent &event);
   };
 }
 

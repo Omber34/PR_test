@@ -25,7 +25,7 @@ namespace core
     chatEvent.type = ChatEvent::EventType::PARTICIPANT_SHARE_FILE;
     auto filename = sourcePath.string();
     chatEvent.message = {QString::fromStdString(filename), true};
-    result.packets.emplace_front(CoreUtility::packetFromEvent(chatEvent));
+    result.packets.insert(result.packets.cbegin(), CoreUtility::packetFromEvent(chatEvent));
     return result;
   }
 

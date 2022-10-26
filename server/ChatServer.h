@@ -5,7 +5,7 @@
 #ifndef PR_TEST_CHATSERVER_H
 #define PR_TEST_CHATSERVER_H
 
-#include <ChatAppModel.h>
+
 #include <string>
 #include <vector>
 #include <memory>
@@ -18,14 +18,13 @@ namespace server
     explicit ChatServer();
 
     ChatServer(const ChatServer &other) = delete;
+
     ChatServer(ChatServer &&other) = delete;
+
     ChatServer &operator=(const ChatServer &other) = delete;
+
     ChatServer &operator=(ChatServer &&other) = delete;
-
-  private:
-    core::ChatAppModelPtr model;
   };
+
 }
-
-
 #endif //PR_TEST_CHATSERVER_H

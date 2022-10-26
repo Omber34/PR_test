@@ -47,9 +47,11 @@ namespace core
     ChatEvent result;
     result.type = static_cast<ChatEvent::EventType>(jsonEvent["type"].toInt(-1));
     result.user = jsonEvent["user"].toString();
-    result.message = { jsonEvent["message"].toString(), false };
-    result.packetCount = jsonEvent["packetCount"].toInt(0);
-    result.type = ChatEvent::PARTICIPANT_MESSAGE;
+    if (result.type == ChatEvent::PARTICIPANT_MESSAGE)
+      result.message = { jsonEvent["message"].toString(), false };
+    if (result.type == ChatEvent::PARTICIPANT_FILE)
+      result.packetCount = jsonEvent["packetCount"].toInt(0);
+
     return result;
   }
 
@@ -77,7 +79,7 @@ namespace core
     metainfoPacket.event_id(result.packets.front().event_id());
     metainfoPacket.encode_header();
 
-    result.packets.push_front(metainfoPacket);
+    result.packets.insert(result.packets.cbegin(), std::move(metainfoPacket));
 
     return result;
   }

@@ -32,7 +32,7 @@ namespace client
 
     auto node = unfinishedFiles.extract(packetId);
     core::FileManager::saveFilePacketToDisk(getDownloadFilename(node.mapped().packets.front()), node.mapped());
-    return *node.mapped().packets.begin();
+    return std::make_optional(std::move(*node.mapped().packets.begin()));
   }
 
   std::string ClientFileManager::getDownloadFilename(const core::ChatEvent &event)

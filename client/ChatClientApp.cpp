@@ -8,7 +8,7 @@ namespace client
 {
   ChatClientApp::ChatClientApp()
   : client(std::make_shared<ChatClient>())
-  , model(std::make_shared<ChatModel>(client))
+  , model(std::make_shared<ChatModel>())
   {
 
   }

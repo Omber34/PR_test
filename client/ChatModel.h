@@ -23,7 +23,7 @@ namespace client
     };
     Q_PROPERTY(QString user READ getUser WRITE setUser)
 
-    explicit ChatModel(IChatClientPtr client, QObject *parent = nullptr);
+    explicit ChatModel(QObject *parent = nullptr);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 

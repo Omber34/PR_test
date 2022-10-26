@@ -41,9 +41,9 @@ namespace core
 
     ChatPacket &operator=(const ChatPacket &other) = default;
 
-    ChatPacket(ChatPacket &&other) = default;
+    ChatPacket(ChatPacket &&other);
 
-    ChatPacket &operator=(ChatPacket &&other) = default;
+    ChatPacket &operator=(ChatPacket &&other);
 
     const uint8_t *data() const;
 

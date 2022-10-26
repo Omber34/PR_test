@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <QMetaEnum>
 
 namespace core
 {
@@ -33,4 +34,10 @@ namespace core
 
     static ChatPacket packetFromAppEvent(const AppEventPtr &packet);
   };
+
+  template<typename QEnum>
+  std::string enumValueToString(const QEnum value)
+  {
+    return std::string(QMetaEnum::fromType<QEnum>().valueToKey(value));
+  }
 }

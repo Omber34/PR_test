@@ -10,9 +10,9 @@
 
 namespace client
 {
-  ChatModel::ChatModel(IChatClientPtr client, QObject *parent)
+  ChatModel::ChatModel(QObject *parent)
           : QAbstractListModel(parent)
-          , client(client)
+          , client(std::make_shared<ChatClient>())
   {
     QObject::connect(client.get(), &IChatClient::eventReceived, this, &ChatModel::addEvent);
   }

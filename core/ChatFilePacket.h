@@ -6,14 +6,14 @@
 #define PR_TEST_CHATFILEPACKET_H
 
 
-#include <list>
+#include <vector>
 #include "ChatPacket.h"
 
 namespace core
 {
   struct ChatFilePacket
   {
-    std::list<ChatPacket> packets;
+    std::vector<ChatPacket> packets;
     size_t expectedCount;
   };
 }

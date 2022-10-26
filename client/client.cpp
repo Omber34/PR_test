@@ -4,9 +4,12 @@
 #include <QQmlContext>
 
 #include "ChatClientApp.h"
+#include "Logger.h"
 
 int main(int argc, char **argv)
 {
+  core::Logger::init("server_log");
+
   std::string host = "127.0.0.1", port = "4026";
   if (argc == 3)
   {
@@ -18,8 +21,7 @@ int main(int argc, char **argv)
 
   QQmlApplicationEngine engine;
 
-  qmlRegisterUncreatableType<QAbstractListModel>("models", 1, 0, "AbstractListModel",
-                                                "ChatModel require client");
+  qmlRegisterType<client::ChatModel>("models", 1, 0, "ChatModel");
 
   qRegisterMetaType<core::ChatEvent>();
   qmlRegisterUncreatableType<core::ChatEvent>("enums", 1, 0, "ChatEvent",
